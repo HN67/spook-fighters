@@ -1,0 +1,23 @@
+/*General Planning for Physics:
+Pseudocode for jumping, falling, running, etc.
+Written on object perspective
+*/
+Variables:
+	xSpeed
+	ySpeed
+	jumps
+	force
+	gravity
+	friction
+Game Loop:
+	if right-key-pressed:
+		increase xSpeed by force
+	if left-key-pressed:
+		decreases xSpeed by force
+	Running Mechanics:
+		Realistically, what stops you from infinitly accelerating is that you loose most of your speed upon
+		hitting the ground, so your speed is determined by pushoffs a second * force of the pushoff. However,
+		you have to accelerate because you cannot cycle your legs as fast, but once in the air you can cycle the
+		leg in the air so it is ready for when you land?
+	--decrease xSpeed magnitude by floor(xSpeed / 10) [+/*] friction??
+	
