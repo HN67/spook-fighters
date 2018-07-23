@@ -23,13 +23,6 @@ class Point:
 # Base entity class that holds position and size and frames basic methods
 class Entity:
     """Abstract base class for entities"""
-
-    # The entity class should perhaps automatically
-    # add itself to the game entities set
-    # (consider implementing)
-    # Pros: Reliability?, Especially for projectile
-    # Cons: Inability for "invisible" objects that have not been added to game yet
-    # Cons cont.: However it already auto adds to canvas, so its not invisible  
     
     def __init__(self, game, x, y, width, height):
         self.game = game
@@ -39,11 +32,28 @@ class Entity:
         self.height = height
         self.width = width
 
+    ## Basic functions for entity behavior inside a Game object
+    def start(self):
+        """Adds the entity to relavent sets"""
+        self.game.entities.add(self)
+
+    def draw(self):
+        """Handles the creation of the entity on the canvas"""
+        raise NotImplementedError("{} has no meaningful relationship with the canvas".format(type(self)))
+
+    def redraw(self):
+        """Handles the updating of the sprite of the entity on the canvas"""
+        raise NotImplementedError("{} has no meaningful relationship with the canvas".format(type(self)))
+
+    def remove(self):
+        """Handles the deletion of the entity"""
+        self.game.entities.remove(self)
+
     def check(self):
-        raise NotImplementedError("{} is an abstract class".format(type(self)))
+        raise NotImplementedError("{} does not update".format(type(self)))
 
     def act(self):
-        raise NotImplementedError("{} is an abstract class".format(type(self)))
+        raise NotImplementedError("{} does not update".format(type(self)))
 
     def collisions(self, *others):
         """Takes a list of other entities and checks for collisions"""
@@ -136,26 +146,6 @@ class Entity:
         # (For jump resets mostly)
         return Point(collX, collY)
 
-# Abstract character class for playable characters
-# Unimplemented
-class Character(Entity):
-
-    def __init__(self, game, x, y, width, height, health):
-        super().__init__(game, x, y, width, height)
-        self.maxHealth = health
-
-    def offensive(self):
-        pass
-
-    def defensive(self):
-        pass
-
-    def skill(self):
-        pass
-
-    def ultimate(self):
-        pass
-
 # Basic testing class
 class ControllableBox(Entity):
 
@@ -178,9 +168,20 @@ class ControllableBox(Entity):
         self.xSpeed = 0
         self.ySpeed = 0
 
+        
+    def start(self):
+        super().start()
+        self.draw()
+
+    def draw(self):
         self.sprite = self.game.canvas.create_rectangle(*corners(self.x, self.y,
                                        self.width, self.height))
 
+    def redraw(self):
+        # Update canvas
+        self.game.canvas.coords(self.sprite, *corners(self.x, self.y,
+                                       self.width, self.height))
+        
     def check(self):
         self.newPresses = self.game.newKeys.intersection(self.controls)
         self.keyPresses = self.game.keysPressed.intersection(self.controls)
@@ -211,9 +212,18 @@ class ControllableBox(Entity):
             # Zero vertical speed due to ceiling or floor collision
             self.ySpeed = 0
 
-        # Update canvas
-        self.game.canvas.coords(self.sprite, *corners(self.x, self.y,
-                                       self.width, self.height))
+
+        ## Manage the creation of projectiles
+        #print(self.newPresses)
+        if ("q" in self.game.newKeys):
+            print("blam")
+            self.game.activate.add(Projectile(self.game, self.x, self.y,
+                                              5, 5,
+                                              0, -5, 10, "red"))
+
+        # Allocate object to be redrawn
+        self.game.redraw.add(self)
+        
 
 # Basic barrier class with various location means
 class Barrier(Entity):
@@ -235,6 +245,26 @@ class Barrier(Entity):
         if not visible:
             game.canvas.itemconfig(self.sprite, state = "hidden")
 
+    def start(self):
+        super().start()
+        self.game.barriers.add(self)
+        self.draw()
+
+    def draw(self):
+        self.sprite = self.game.canvas.create_rectangle(*corners(self.x, self.y,
+                                       self.width, self.height),
+                                       fill = self.color, outline = self.color)
+
+    def remove(self):
+        self.game.canvas.delete(self.sprite)
+        self.game.entities.remove(self)
+        self.game.barriers.remove(self)
+    
+    def redraw(self):
+        # Update canvas
+        self.game.canvas.coords(self.sprite, *corners(self.x, self.y,
+                                       self.width, self.height))
+
     def check(self):
         pass
 
@@ -244,7 +274,7 @@ class Barrier(Entity):
 # Basic projectile class
 class Projectile(Entity):
 
-    def __init__(self, game, x, y, width, height, xSpeed, ySpeed, lifespan, color):
+    def __init__(self, game, x, y, width, height, xSpeed, ySpeed, lifeSpan, color):
         """Creates a projectile object for game
            If lifespan is set to False, the projectile is immortal,
            otherwise it lives for the lifespan number of ticks"""
@@ -252,29 +282,53 @@ class Projectile(Entity):
         # Call standard entity constructor
         super().__init__(game, x, y, width, height)
 
-        self.color = color
+        self.xSpeed = xSpeed
+        self.ySpeed = ySpeed
 
-        self.sprite = self.game.canvas.create_rectangle(x, y, width, height,
-                                                        fill = self.color,
-                                                        outline = self.color)
+        self.lifeSpan = lifeSpan
+        
+        self.color = color
         
         # Initialize age field
-        age = 0
+        self.age = 0
+
+    def start(self):
+        super().start()
+        self.draw()
+
+    def draw(self):
+        self.sprite = self.game.canvas.create_rectangle(
+                                    *corners(self.x, self.y, self.width, self.height),
+                                                        fill = self.color,
+                                                        outline = self.color)
+
+    def redraw(self):
+        # Update canvas
+        self.game.canvas.coords(self.sprite, *corners(self.x, self.y,
+                                       self.width, self.height))
+
+    def remove(self):
+        self.game.canvas.delete(self.sprite)
+        self.game.entities.remove(self)
 
     def check(self):
         # Check age if not immortal
-        if not lifespan == False:
-            if age >= lifespan:
-                # Delete projectile by deleting object reference and
-                # removing from game entities set
-                self.game.canvas.delete(self)
-                self.game.entities.remove(self)
-                del self
-        # Maybe this should be moved to act()
-        age += 1
-        
+        if not self.lifeSpan == False:
+            if self.age >= self.lifeSpan:
+                # Delete projectile
+                self.game.removal.add(self)
+                
     def act(self):
-        pass
+        # Increment age
+        self.age += 1
+        # Change position
+        self.x += self.xSpeed
+        self.y += self.ySpeed
+
+        # Queue for redrawal
+        self.game.redraw.add(self)
+
+        
 
 # Main game class (very unrefined)
 class Game:
@@ -294,7 +348,13 @@ class Game:
         # Sets to track entities
         self.entities = set()
         self.barriers = set()
-        
+
+        # Sets that track entities with action requests
+        self.redraw = set()
+        self.activate = set()
+        self.removal = set()
+
+        # Sets that track key presses
         self.keysPressed = set()
         self.lastKeys = set()
         self.newKeys = set()
@@ -304,27 +364,18 @@ class Game:
 
         ## Basic testing
         # Controllable entity
-        self.entities.add(ControllableBox(self, 100, 100, 15, 15, 3,
-                                          15, 1, 1))
+        ControllableBox(self, 100, 100, 15, 15, 3, 9, 1, 0.5).start()
 
         # Stage walls
-        self.add_barrier(Barrier(self, -50, 0, -1, 299, form = "corners",
-                                  visible = False))
-        self.add_barrier(Barrier(self, 400, 0, 449, 299, form = "corners",
-                         visible = False))
-        self.add_barrier(Barrier(self, 0, -50, 399, -1, form = "corners",
-                         visible = False))
-        self.add_barrier(Barrier(self, 0, 250, 399, 299, form = "corners",
-                                 color = "green"))
+        Barrier(self, -50, 0, -1, 299, form = "corners", visible = False).start()
+        Barrier(self, 400, 0, 449, 299, form = "corners", visible = False).start()
+        Barrier(self, 0, -50, 399, -1, form = "corners", visible = False).start()
+        Barrier(self, 0, 250, 399, 299, form = "corners", color = "green").start()
         # Random blocks in stage
-        self.add_barrier(Barrier(self, 50, 200, 25, 25))
-        self.add_barrier(Barrier(self, 50, 75, 24, 125, color = "Green"))
-        self.add_barrier(Barrier(self, 150, 100, 25, 25, color = "Pink"))
-        self.add_barrier(Barrier(self, 250, 50, 25, 25, color = "Orange"))
-
-    def add_barrier(self, barrier):
-        self.entities.add(barrier)
-        self.barriers.add(barrier)
+        Barrier(self, 50, 200, 25, 25).start()
+        Barrier(self, 50, 75, 24, 125, color = "Green").start()
+        Barrier(self, 150, 100, 25, 25, color = "Pink").start()
+        Barrier(self, 250, 50, 25, 25, color = "Orange").start()
     
     def check_press(self, event):      
         self.keysPressed.add(event.char)
@@ -335,12 +386,25 @@ class Game:
     def game_loop(self):
 
         self.newKeys = self.keysPressed - self.lastKeys  
+
+        for entity in self.activate:
+            entity.start()
+        self.activate.clear()
         
         for entity in self.entities:
             entity.check()
+
+        for entity in self.removal:
+            entity.remove()
+        self.removal.clear()
+        
         for entity in self.entities:
             entity.act()
 
+        for entity in self.redraw:
+            entity.redraw()       
+        self.redraw.clear()
+        
         self.lastKeys = self.keysPressed.copy()
         
         self.root.after(20, self.game_loop)
