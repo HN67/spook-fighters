@@ -11,6 +11,10 @@
 # tkinter package for graphics
 import tkinter as tk
 
+## Module level constants
+# Determines if debug info is shown
+DEBUG_INFO = True
+
 ## Define basic classes
 # A basic container that has an x and y attribute
 class Point:
@@ -209,8 +213,8 @@ class ControllableBox(Entity):
         #self.ySpeed -= (self.jump if ("w" in self.newPresses) else 0)
         self.ySpeed += (self.fall if ("s" in self.keyPresses) else 0)
 
-        # Gravity
-        self.ySpeed += self.gravity
+        # Gravity AYA
+        aself.ySpeed += self.gravity
 
         # Wall stick (needs testing) and wall jump
         if (self.collided.x):
@@ -231,9 +235,7 @@ class ControllableBox(Entity):
             self.ySpeed = -1*self.jump
 
 
-        print(f"A: {self.ySpeed}")
-
-        #print(self.xSpeed, self.ySpeed)
+        debug("A", self.ySpeed)
         
         # Handle wall collisions
         self.collided = self.move_collide(Point(self.xSpeed, self.ySpeed), self.game.barriers)
@@ -457,10 +459,12 @@ class Game:
 ## Define some top-scope functions
 
 # Debug info function that can turn off all debug print statements
-SHOW_DEBUG = True
-print(
-def debug(*value, sep = " ", end = "\n", file = sys.stdout, flush = False)
-    print(*value, sep = sep, end = end, file = file, flush = flush)
+if DEBUG_INFO:
+    def debug(*value, sep = " ", end = "\n"):
+        print(*value, sep = sep, end = end)
+else:
+    def debug(*value, sep = " ", end = "\n"):
+        return None
 
 # Function that returns topleft bottomright corners based
 # on topleft corner + width/height
