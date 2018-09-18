@@ -160,13 +160,29 @@ class ControllableBox(Entity):
         self.keyPresses = set()
         self.newPresses = set()
 
+        # Movement speed (horizontal)
         self.speed = speed
+        # Jump power
         self.jump = jump
+        # Force of gravity
         self.gravity = gravity
+        # Power of accelerated falling
         self.fall = fall
 
+        # Number of max air jumps
+        self.airJumps = 2
+
+        # Dynamic current xSpeed
         self.xSpeed = 0
+        # Direction of last wall-cling
+        self.cling = 0
+
+        # Current ySpeed
         self.ySpeed = 0
+        # Remaining number of jumps
+        self.jumps = 0
+
+        self.collided = Point(False, False)
 
         
     def start(self):
@@ -189,26 +205,55 @@ class ControllableBox(Entity):
     def act(self):
         # Create speed x/y based on key presses
         self.xSpeed = self.speed*sum([self.controls[i]["x"] for i in self.keyPresses])
-        if ("w" in self.newPresses):
-            self.ySpeed = -1*self.jump
+         
         #self.ySpeed -= (self.jump if ("w" in self.newPresses) else 0)
         self.ySpeed += (self.fall if ("s" in self.keyPresses) else 0)
+
+        # Gravity
         self.ySpeed += self.gravity
+
+        # Wall stick (needs testing) and wall jump
+        if (self.collided.x):
+            self.ySpeed = 0
+            if ("w" in self.newPresses):
+                print("walljump")
+                print(self.cling * self.jump)
+                self.xSpeed = self.cling * self.jump
+
+                
+        # Jump code
+        if ("w" in self.newPresses) and (self.jumps > 0 or self.ySpeed == 0):
+            print("^"+str(self.ySpeed))
+            # Decrement jump counter if in air
+            if not self.ySpeed == 0:
+                self.jumps -= 1
+            # Set y-velocity
+            self.ySpeed = -1*self.jump
+
+
+        print(f"A: {self.ySpeed}")
 
         #print(self.xSpeed, self.ySpeed)
         
         # Handle wall collisions
-        collided = self.move_collide(Point(self.xSpeed, self.ySpeed), self.game.barriers)
+        self.collided = self.move_collide(Point(self.xSpeed, self.ySpeed), self.game.barriers)
 
         # Zero speeds upon collision
         # Perhaps implement logic to detect between floor and ceiling
-        if collided.x:
+        if self.collided.x:
+            
+            # Reset jumps for wall jump
+            self.jumps = self.airJumps
+
+            # Determine direction of collision
+            self.cling = abs(self.xSpeed)/self.xSpeed
+
             # Zero horizontal speed due to wall collision
             self.xSpeed = 0
-            # Experimental zeroing of vertical speed to simulate wall cling
-            # (Needs drastic refinement)
-            self.ySpeed = 0
-        if collided.y:
+            
+        if self.collided.y:
+            if self.ySpeed > 0:
+                self.jumps = self.airJumps
             # Zero vertical speed due to ceiling or floor collision
             self.ySpeed = 0
 
@@ -410,6 +455,15 @@ class Game:
         self.root.after(20, self.game_loop)
 
 ## Define some top-scope functions
+
+# Debug info function that can turn off all debug print statements
+SHOW_DEBUG = True
+print(
+def debug(*value, sep = " ", end = "\n", file = sys.stdout, flush = False)
+    print(*value, sep = sep, end = end, file = file, flush = flush)
+
+# Function that returns topleft bottomright corners based
+# on topleft corner + width/height
 def corners(x, y, width, height):
     return [x, y, x + width-1, y + height-1]
 
