@@ -156,10 +156,14 @@ class ControllableBox(Entity):
     def __init__(self, game, x, y, width, height, speed, jump, fall, gravity):
         super().__init__(game, x, y, width, height)
 
-        self.controls = {"a":{"x":-1,"y":0},
-                         "d":{"x":1,"y":0},
-                         "w":{"x":0,"y":-1},
-                         "s":{"x":0,"y":1}}
+        self.controls = {
+            
+            "w": "w",
+            "a": "a",
+            "s": "s",
+            "d": "d",
+        
+        }
         
         self.keyPresses = set()
         self.newPresses = set()
@@ -180,6 +184,10 @@ class ControllableBox(Entity):
         self.xSpeed = 0
         # Direction of last wall-cling
         self.cling = 0
+        # Freeze prevents movement for an amount of ticks
+        self.xFreeze = 0
+        # Constant for length of wallJump freeze
+        self.wallJumpFreezeTicks = 2
 
         # Current ySpeed
         self.ySpeed = 0
@@ -207,41 +215,64 @@ class ControllableBox(Entity):
         self.keyPresses = self.game.keysPressed.intersection(self.controls)
 
     def act(self):
-        # Create speed x/y based on key presses
-        self.xSpeed = self.speed*sum([self.controls[i]["x"] for i in self.keyPresses])
+
+        # Set x speed if not frozen and on ground
+        if self.xFreeze == 0:
+            if self.collided.y:
+
+                # A left D right
+                if self.controls["a"] in self.keyPresses:
+                    self.xSpeed = -self.speed
+                elif self.controls["d"] in self.keyPresses:
+                    self.xSpeed = self.speed
+                else:
+                    self.xSpeed = 0
+        else:
+            # Decrease freeze if frozen
+            self.xFreeze -= 1
          
-        #self.ySpeed -= (self.jump if ("w" in self.newPresses) else 0)
-        self.ySpeed += (self.fall if ("s" in self.keyPresses) else 0)
+        # Add fast fall pull
+        self.ySpeed += (self.fall if (self.controls["s"] in self.keyPresses) else 0)
 
-        # Gravity AYA
-        aself.ySpeed += self.gravity
+        # Add gravity pull
+        self.ySpeed += self.gravity
 
-        # Wall stick (needs testing) and wall jump
-        if (self.collided.x):
-            self.ySpeed = 0
-            if ("w" in self.newPresses):
-                print("walljump")
-                print(self.cling * self.jump)
-                self.xSpeed = self.cling * self.jump
+        # wall input code
+        if (self.collided.x):          
 
+            # Wall jump
+            if (self.controls["w"] in self.newPresses):
                 
+                # Set speed away from wall
+                self.xSpeed = -self.cling * self.jump
+                # Freeze movement temporarily
+                self.xFreeze = self.wallJumpFreezeTicks
+          
         # Jump code
-        if ("w" in self.newPresses) and (self.jumps > 0 or self.ySpeed == 0):
-            print("^"+str(self.ySpeed))
+        if (self.controls["w"] in self.newPresses) and (self.jumps > 0):
+
             # Decrement jump counter if in air
-            if not self.ySpeed == 0:
+            if not self.collided.y:
                 self.jumps -= 1
             # Set y-velocity
             self.ySpeed = -1*self.jump
-
-
-        debug("A", self.ySpeed)
         
-        # Handle wall collisions
+        # Move with collisions enabled
         self.collided = self.move_collide(Point(self.xSpeed, self.ySpeed), self.game.barriers)
 
-        # Zero speeds upon collision
-        # Perhaps implement logic to detect between floor and ceiling
+        # React to collisions
+
+        # Vertical floor/ceiling collision
+        if self.collided.y:
+
+            # Reset jumps on floor collision
+            if self.ySpeed > 0:
+                self.jumps = self.airJumps
+
+            # Zero vertical speed due to vertical collision
+            self.ySpeed = 0
+
+        # Horizontal wall collision
         if self.collided.x:
             
             # Reset jumps for wall jump
@@ -252,12 +283,10 @@ class ControllableBox(Entity):
 
             # Zero horizontal speed due to wall collision
             self.xSpeed = 0
-            
-        if self.collided.y:
-            if self.ySpeed > 0:
-                self.jumps = self.airJumps
-            # Zero vertical speed due to ceiling or floor collision
+            # Cling to wall
             self.ySpeed = 0
+            
+        
 
 
         ## Manage the creation of projectiles
