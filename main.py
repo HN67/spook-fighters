@@ -41,12 +41,15 @@ class Dir(Enum):
 class Entity(pygame.sprite.Sprite):
     """Abstract base class for entities"""
 
-    def __init__(self, rect):
+    def __init__(self, rect, image=None):
         # Call superclass Sprite init
         pygame.sprite.Sprite.__init__(self)
 
         # Create image
-        self.image = pygame.Surface((rect.width, rect.height))
+        if image is None:
+            self.image = pygame.Surface((rect.width, rect.height))
+        else:
+            self.image = image
 
         # Reference rect
         self.rect = rect
@@ -198,12 +201,26 @@ class Player(Entity):
         # Remaining number of jumps
         self.jumps = 0
 
+        # Tracks if there was a collision last update()
         self.collided = Pair(False, False)
 
+        # Data collected by collect()
+        self.collected = {"barriers": None, "events": None}
 
-    def update(self, entities, events):
+
+    def collect(self, barriers, events):
+        """Give barrier list and events (Player.Events) to be used next update()"""
+
+        self.collected = {"barriers": barriers, "events": events}
+
+
+    def update(self):
         """Updates the physics of the Player, when colliding with the entities SpriteGroup
            And with events from Player.Events passed in"""
+
+        # Reference collected data
+        barriers = self.collected["barriers"]
+        events = self.collected["events"]
 
         # Set x speed if not frozen and on ground
         if self.xFreeze == 0:
@@ -219,7 +236,7 @@ class Player(Entity):
         else:
             # Decrease freeze if frozen
             self.xFreeze -= 1
-        
+
         # Add fast fall pull
         self.ySpeed += (self.fall if (self.Events.DOWN in events) else 0)
 
@@ -249,10 +266,9 @@ class Player(Entity):
         # TODO probably break function here and move rest into another (move or something)
 
         # Move with collisions enabled
-        self.collided = self.move(self.xSpeed, self.ySpeed, entities)
+        self.collided = self.move(self.xSpeed, self.ySpeed, barriers)
 
         # React to collisions
-
         # Vertical floor/ceiling collision
         if self.collided.y:
 
@@ -293,47 +309,13 @@ class Barrier(Entity):
     """Creates barrier, using second point set as relative or fixed (size/corners),
             Origin is always first set, so second should be greater to prevent odd behavior"""
 
-    def __init__(self, game, x1, y1, x2, y2, form="size", color = "black", visible = True):
-        if form == "size":
-            super().__init__(game, x1, y1, x2, y2)
-        elif form == "corners":
-            super().__init__(game, x1, y1, x2 - x1 + 1, y2 - y1 + 1)
+    def __init__(self, rect, image=None):
 
-        self.color = color
+        super().__init__(rect, image)
 
-        self.sprite = self.game.canvas.create_rectangle(*corners(self.x, self.y,
-                                       self.width, self.height),
-                                       fill = self.color, outline = self.color)
-
-        if not visible:
-            game.canvas.itemconfig(self.sprite, state = "hidden")
-
-    def start(self):
-        super().start()
-        self.game.barriers.add(self)
-        self.draw()
-
-    def draw(self):
-        self.sprite = self.game.canvas.create_rectangle(*corners(self.x, self.y,
-                                       self.width, self.height),
-                                       fill = self.color, outline = self.color)
-
-    def remove(self):
-        self.game.canvas.delete(self.sprite)
-        self.game.entities.remove(self)
-        self.game.barriers.remove(self)
-    
-    def redraw(self):
-        # Update canvas
-        self.game.canvas.coords(
-            self.sprite, *corners(self.x, self.y,
-                                       self.width, self.height))
-
-    def check(self):
+    def update(self):
         pass
 
-    def act(self):
-        pass
 
 # Basic projectile class
 class Projectile(Entity):
