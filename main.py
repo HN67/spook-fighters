@@ -319,58 +319,34 @@ class Barrier(Entity):
 
 # Basic projectile class
 class Projectile(Entity):
+    """Linear Moving projectile"""
 
-    def __init__(self, game, x, y, width, height, xSpeed, ySpeed, lifeSpan, color):
+    def __init__(self, rect, image=None, xSpeed=0, ySpeed=0, lifeSpan=-1):
         """Creates a projectile object for game
            If lifespan is set to False, the projectile is immortal,
            otherwise it lives for the lifespan number of ticks"""
 
         # Call standard entity constructor
-        super().__init__(game, x, y, width, height)
+        super().__init__(rect, image)
 
+        # Reference parameters
         self.xSpeed = xSpeed
         self.ySpeed = ySpeed
 
-        self.lifeSpan = lifeSpan
-        
-        self.color = color
-        
-        # Initialize age field
-        self.age = 0
+        self.age = lifeSpan
 
-    def draw(self):
-        self.sprite = self.game.canvas.create_rectangle(
-                                    *corners(self.x, self.y, self.width, self.height),
-                                                        fill = self.color,
-                                                        outline = self.color)
+    def update(self):
+        # Decrement age
+        self.age -= 1
 
-    def redraw(self):
-        # Update canvas
-        self.game.canvas.coords(self.sprite, *corners(self.x, self.y,
-                                       self.width, self.height))
-
-    def remove(self):
-        self.game.canvas.delete(self.sprite)
-        self.game.entities.remove(self)
-
-    def check(self):
-        # Check age if not immortal
-        if not self.lifeSpan == False:
-            if self.age >= self.lifeSpan:
-                # Delete projectile
-                self.game.removal.add(self)
-                
-    def act(self):
-        # Increment age
-        self.age += 1
         # Change position
-        self.x += self.xSpeed
-        self.y += self.ySpeed
+        self.rect.x += self.xSpeed
+        self.rect.y += self.ySpeed
 
-        # Queue for redrawal
-        self.game.redraw.add(self)
+        # Return False when 'dead'
+        return self.age > 0
 
-        
+
 
 # Main game class (very unrefined)
 class Game:
