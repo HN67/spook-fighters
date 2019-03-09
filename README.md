@@ -1,5 +1,5 @@
 # spook-fighters
-A repository for the development of the free open-source game Spook Fighters
+A repository for the development of the free open-source game Spook Fighters. This is a hobby project, and is currently under volatile development.
 
 # mechanics
 Possible Mechanic Designs:
