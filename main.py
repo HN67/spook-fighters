@@ -5,7 +5,7 @@
 # At some point this should probably be broken into modules?
 # Though the stuff is pretty interconnected (is that an issue?)
 
-## Import modules
+# Import modules
 from dataclasses import dataclass
 import enum
 from enum import Enum
@@ -13,18 +13,15 @@ from enum import Enum
 # tkinter package for graphics
 import tkinter as tk
 
-# Import other files
-from Structures import Point, Rect
-
 # Import pygame
 import pygame
 
-## Module level constants
+# Module level constants
 # Determines if debug info is shown
 DEBUG_INFO = True
 
-## Define basic classes
-class Pair:
+# Define basic classes
+class Pair: # pylint: disable=too-few-public-methods
     """Pair class collecting an x and y"""
 
     def __init__(self, x, y):
@@ -33,7 +30,7 @@ class Pair:
 
 
 class Dir(Enum):
-    """Relative direction enum"""   
+    """Relative direction enum"""
     UP = (0, -1)
     RIGHT = (1, 0)
     DOWN = (0, 1)
@@ -154,88 +151,27 @@ class Entity(pygame.sprite.Sprite):
 
         # Move ghost to self
         self.rect = ghost.rect
-        """
-        # Save current position
-        oriX = self.x
-        oriY = self.y
-        
-        # Move x based on speed
-        self.x += speed.x
-        collX = False
-        # Check for collisions
-        wall = list(self.collisions(*objects))
-        # Fix collisions and check again
-        while len(wall) > 0:
-            collX = True
-            # Align to edge of wall based on speed
-            self.align("x", speed.x, wall[0])
-            # Recheck collisions
-            wall = list(self.collisions(*objects))
-        # Move current position into storage and reset x to check y properly
-        futureX = self.x
-        self.x = oriX
 
-        # Move y based on speed    
-        self.y += speed.y
-        collY = False
-        # Check for collisions
-        wall = list(self.collisions(*objects))
-        # Fix collisions and check again
-        while len(wall) > 0:
-            collY = True
-            # Align to edge of wall based on speed
-            self.align("y", speed.y, wall[0])
-            # Recheck collisions
-            wall = list(self.collisions(*objects))
-        # Move current position and reset y (simply for potential forward compat)
-        futureY = self.y
-        self.y = oriY
+        # Return the collided pair
+        return collided
 
-        # Update position
-        self.x = futureX
-        self.y = futureY
-        
-        # Check corner case (literally when colliding with corner at diagonal velocity)
-        '''
-           C
-          /
-        []
-        '''
-        wall = list(self.collisions(*objects))
-        # Fix collision
-        while len(wall) > 0:
-            collX = True
-            collY = True
-            # Align to corner of wall based on speed in both vectors
-            self.align("x", speed.x, wall[0])
-            self.align("y", speed.y, wall[0])
-            # Recheck collisions
-            wall = list(self.collisions(*objects))  
-
-        # Return object holding truth of collisions in each axis
-        # (For jump resets mostly)
-        return Point(collX, collY)
-        """
 
 # Basic testing class
-class ControllableBox(Entity):
+class Player(Entity):
+    """This represents a controllable player"""
 
-    def __init__(self, game, x, y, width, height, speed, jump, fall, gravity):
-        super().__init__(game, x, y, width, height)
+    class Events(Enum):
+        """Enumerator of event types for Player"""
+        UP = enum.auto()
+        DOWN = enum.auto()
+        LEFT = enum.auto()
+        RIGHT = enum.auto()
 
-        self.controls = {
-            
-            "w": "w",
-            "a": "a",
-            "s": "s",
-            "d": "d",
-        
-        }
-        
-        self.keyPresses = set()
-        self.newPresses = set()
+    def __init__(self, rect, speed, jump, fall, gravity):
+        super().__init__(rect)
 
-        # Movement speed (horizontal)
+        # Reference parameters
+        # Movement speed (horizontal) TODO Maybe make horizontal acceleration
         self.speed = speed
         # Jump power
         self.jump = jump
@@ -244,88 +180,76 @@ class ControllableBox(Entity):
         # Power of accelerated falling
         self.fall = fall
 
-        # Number of max air jumps
+        # Number of max air jumps TODO hello this is static again
         self.airJumps = 2
+        # Constant for length of wallJump freeze TODO Another static
+        self.wallJumpFreezeTicks = 2
 
+        # Construct dynamic variables
         # Dynamic current xSpeed
         self.xSpeed = 0
         # Direction of last wall-cling
         self.cling = 0
         # Freeze prevents movement for an amount of ticks
         self.xFreeze = 0
-        # Constant for length of wallJump freeze
-        self.wallJumpFreezeTicks = 2
 
         # Current ySpeed
         self.ySpeed = 0
         # Remaining number of jumps
         self.jumps = 0
 
-        self.collided = Point(False, False)
+        self.collided = Pair(False, False)
 
-        
-    def start(self):
-        super().start()
-        self.draw()
 
-    def draw(self):
-        self.sprite = self.game.canvas.create_rectangle(*corners(self.x, self.y,
-                                       self.width, self.height))
-
-    def redraw(self):
-        # Update canvas
-        self.game.canvas.coords(self.sprite, *corners(self.x, self.y,
-                                       self.width, self.height))
-        
-    def check(self):
-        self.newPresses = self.game.newKeys.intersection(self.controls)
-        self.keyPresses = self.game.keysPressed.intersection(self.controls)
-
-    def act(self):
+    def update(self, entities, events):
+        """Updates the physics of the Player, when colliding with the entities SpriteGroup
+           And with events from Player.Events passed in"""
 
         # Set x speed if not frozen and on ground
         if self.xFreeze == 0:
             if self.collided.y:
 
                 # A left D right
-                if self.controls["a"] in self.keyPresses:
+                if self.Events.LEFT in events:
                     self.xSpeed = -self.speed
-                elif self.controls["d"] in self.keyPresses:
+                elif self.Events.RIGHT in events:
                     self.xSpeed = self.speed
                 else:
                     self.xSpeed = 0
         else:
             # Decrease freeze if frozen
             self.xFreeze -= 1
-         
+        
         # Add fast fall pull
-        self.ySpeed += (self.fall if (self.controls["s"] in self.keyPresses) else 0)
+        self.ySpeed += (self.fall if (self.Events.DOWN in events) else 0)
 
         # Add gravity pull
         self.ySpeed += self.gravity
 
         # wall input code
-        if (self.collided.x):          
+        if self.collided.x:
 
             # Wall jump
-            if (self.controls["w"] in self.newPresses):
-                
+            if self.Events.UP in events:
+
                 # Set speed away from wall
                 self.xSpeed = -self.cling * self.jump
                 # Freeze movement temporarily
                 self.xFreeze = self.wallJumpFreezeTicks
-          
+
         # Jump code
-        if (self.controls["w"] in self.newPresses) and (self.jumps > 0):
+        if (self.Events.UP in events) and (self.jumps > 0):
 
             # Decrement jump counter if in air
             if not self.collided.y:
                 self.jumps -= 1
             # Set y-velocity
             self.ySpeed = -1*self.jump
-        
+
+        # TODO probably break function here and move rest into another (move or something)
+
         # Move with collisions enabled
-        self.collided = self.move_collide(Point(self.xSpeed, self.ySpeed), self.game.barriers)
+        self.collided = self.move(self.xSpeed, self.ySpeed, entities)
 
         # React to collisions
 
@@ -341,7 +265,7 @@ class ControllableBox(Entity):
 
         # Horizontal wall collision
         if self.collided.x:
-            
+           
             # Reset jumps for wall jump
             self.jumps = self.airJumps
 
@@ -352,10 +276,8 @@ class ControllableBox(Entity):
             self.xSpeed = 0
             # Cling to wall
             self.ySpeed = 0
-            
-        
 
-
+        """
         ## Manage the creation of projectiles
         #print(self.newPresses)
         if ("q" in self.game.newKeys):
@@ -363,10 +285,8 @@ class ControllableBox(Entity):
             self.game.activate.add(Projectile(self.game, self.x, self.y,
                                               5, 5,
                                               0, -5, 10, "red"))
+        """
 
-        # Allocate object to be redrawn
-        self.game.redraw.add(self)
-        
 
 # Basic barrier class with various location means
 class Barrier(Entity):
@@ -436,10 +356,6 @@ class Projectile(Entity):
         # Initialize age field
         self.age = 0
 
-    def start(self):
-        super().start()
-        self.draw()
-
     def draw(self):
         self.sprite = self.game.canvas.create_rectangle(
                                     *corners(self.x, self.y, self.width, self.height),
@@ -508,7 +424,7 @@ class Game:
 
         ## Basic testing
         # Controllable entity
-        ControllableBox(self, 100, 100, 15, 15, 3, 9, 1, 0.5).start()
+        Player(self, 100, 100, 15, 15, 3, 9, 1, 0.5).start()
 
         # Stage walls
         Barrier(self, -50, 0, -1, 299, form = "corners", visible = False).start()
