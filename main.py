@@ -193,7 +193,7 @@ class Player(Entity):
         self.airJumps = 2
         # Constant for length of wallJump freeze
         # TODO Another static
-        self.wallJumpFreezeTicks = 2
+        self.wallJumpFreezeTicks = 5
 
         # Construct dynamic variables
         # Dynamic current xSpeed
@@ -255,7 +255,7 @@ class Player(Entity):
             if self.Events.UP in events:
 
                 # Set speed away from wall
-                self.xSpeed = -self.cling * self.jump
+                self.xSpeed = -self.cling * self.speed
                 # Freeze movement temporarily
                 self.xFreeze = self.wallJumpFreezeTicks
 
@@ -391,7 +391,8 @@ class Game:
         blocks = (
             Barrier(pygame.Rect(50, 50, 25, 25), color=Color.BLUE),
             Barrier(pygame.Rect(100, 70, 25, 25), color=Color.RED),
-            Barrier(pygame.Rect(300, 200, 25, 25), color=Color.GREEN),
+            Barrier(pygame.Rect(300, 200, 25, 50), color=Color.GREEN),
+            Barrier(pygame.Rect(150, 200, 25, 25), color=Color.GREEN),
         )
         self.allSprites.add(*blocks)
         self.barriers.add(*blocks)
