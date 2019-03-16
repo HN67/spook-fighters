@@ -178,7 +178,8 @@ class Player(Entity):
         super().__init__(rect)
 
         # Reference parameters
-        # Movement speed (horizontal) TODO Maybe make horizontal acceleration
+        # Movement speed (horizontal)
+        # TODO Maybe make horizontal acceleration
         self.speed = speed
         # Jump power
         self.jump = jump
@@ -187,9 +188,11 @@ class Player(Entity):
         # Power of accelerated falling
         self.fall = fall
 
-        # Number of max air jumps TODO hello this is static again
+        # Number of max air jumps
+        # TODO hello this is static again
         self.airJumps = 2
-        # Constant for length of wallJump freeze TODO Another static
+        # Constant for length of wallJump freeze
+        # TODO Another static
         self.wallJumpFreezeTicks = 2
 
         # Construct dynamic variables
@@ -368,6 +371,7 @@ class Game:
 
         ## Basic testing
         # Create Player
+        # TODO whole bunch of statics
         self.player = Player(pygame.Rect(25, 25, 20, 20), 3, 9, 1, 0.5)
         self.player.add(self.allSprites)
 
@@ -458,6 +462,7 @@ def main():
     clock = pygame.time.Clock()
 
     # Create screen
+    # TODO make config for sizes
     screen = pygame.display.set_mode((400, 300))
 
     # Create flag for when game is quit
@@ -473,7 +478,8 @@ def main():
 
         pygame.display.flip()
 
-        # Make this a config? TODO
+        # Make this a config?
+        # TODO move to config
         clock.tick(50)
 
 if __name__ == "__main__":
