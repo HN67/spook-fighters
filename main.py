@@ -414,6 +414,8 @@ class Game:
             playerEvents.add(Player.Events.LEFT)
         if keysHeld[100]:
             playerEvents.add(Player.Events.RIGHT)
+        if keysHeld[115]:
+            playerEvents.add(Player.Events.DOWN)
 
         # Update sprites
         # Buffer player
