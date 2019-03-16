@@ -390,7 +390,9 @@ class Game:
         Barrier(cornerRect(-50, -50, 450, 0)).add(self.allSprites, self.barriers)
 
         # Random blocks in stage
-        #Barrier(50, 200, 25, 25)
+        Barrier(pygame.Rect(50, 50, 25, 25), color=Color.BLUE).add(self.allSprites, self.barriers)
+        Barrier(pygame.Rect(100, 70, 25, 25), color=Color.RED).add(self.allSprites, self.barriers)
+        Barrier(pygame.Rect(300, 200, 25, 25), color=Color.GREEN).add(self.allSprites, self.barriers)
 
     def game_loop(self):
 
