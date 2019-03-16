@@ -270,6 +270,8 @@ class Player(Entity):
             # Set y-velocity
             self.ySpeed = -1*self.jump
 
+            debug("jump", self.collided.y, self.jumps)
+
         # TODO probably break function here and move rest into another (move or something)
 
         # Move with collisions enabled
@@ -372,7 +374,7 @@ class Game:
         ## Basic testing
         # Create Player
         # TODO whole bunch of statics
-        self.player = Player(pygame.Rect(25, 25, 20, 20), 3, 9, 1, 0.5)
+        self.player = Player(pygame.Rect(25, 25, 20, 20), 5, 12, 1, 1.0)
         self.player.add(self.allSprites)
 
         # Stage floor
@@ -462,7 +464,7 @@ def main():
     clock = pygame.time.Clock()
 
     # Create screen
-    # TODO make config for sizes
+    # TODO make config for sizes and set window title
     screen = pygame.display.set_mode((400, 300))
 
     # Create flag for when game is quit
@@ -478,9 +480,9 @@ def main():
 
         pygame.display.flip()
 
-        # Make this a config?
+        # Frame rate
         # TODO move to config
-        clock.tick(50)
+        clock.tick(60)
 
 if __name__ == "__main__":
     main()
