@@ -1,6 +1,9 @@
 # spook-fighters
 A repository for the development of the free open-source game Spook Fighters. This is a hobby project, and is currently under volatile development.
 
+# playing
+If you wish to play Spook Fighters, you need Python 3.7 and Pygame (2?). Clone the repo and then run the main.py file and it should start.
+
 # mechanics
 Possible Mechanic Designs:
 
