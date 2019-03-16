@@ -351,81 +351,70 @@ class Projectile(Entity):
 # Main game class (very unrefined)
 class Game:
 
-    def __init__(self):
+    def __init__(self, screen):
         ## Main fundamental setup
-        # Creates main tk window
-        self.root = tk.Tk()
+        # Reference the window screen
+        self.screen = screen
 
-        # Creates main canvas
-        self.canvas = tk.Canvas(self.root, width = 400, height = 300,
-                                bd = 0, bg = "cyan", highlightthickness = 0)
-        self.canvas.pack()
+        # Create game surface TODO
+        self.surface = pygame.surface.Surface((400, 300))
 
-        self.canvas.focus_set()
+        # TODO Create SpriteGroups
+        self.allSprites = pygame.sprite.Group()
 
-        # Sets to track entities
-        self.entities = set()
-        self.barriers = set()
+        self.barriers = pygame.sprite.Group()
 
-        # Sets that track entities with action requests
-        self.redraw = set()
-        self.activate = set()
-        self.removal = set()
-
-        # Sets that track key presses
-        self.keysPressed = set()
-        self.lastKeys = set()
-        self.newKeys = set()
-
-        self.canvas.bind("<KeyPress>", self.check_press)
-        self.canvas.bind("<KeyRelease>", self.check_release)
+        # TODO collect key events and pass appropoiate events to player
 
         ## Basic testing
-        # Controllable entity
-        Player(self, 100, 100, 15, 15, 3, 9, 1, 0.5).start()
+        # Create Player
+        self.player = Player(pygame.Rect(25, 25, 20, 20), 3, 9, 1, 0.5)
+        self.player.add(self.allSprites)
 
-        # Stage walls
-        Barrier(self, -50, 0, -1, 299, form = "corners", visible = False).start()
-        Barrier(self, 400, 0, 449, 299, form = "corners", visible = False).start()
-        Barrier(self, 0, -50, 399, -1, form = "corners", visible = False).start()
-        Barrier(self, 0, 250, 399, 299, form = "corners", color = "green").start()
+        # Stage floor
+        Barrier(pygame.Rect(0, 250, 400, 50)).add(self.allSprites, self.barriers)
+        
+
         # Random blocks in stage
-        Barrier(self, 50, 200, 25, 25).start()
-        Barrier(self, 50, 75, 24, 125, color = "Green").start()
-        Barrier(self, 150, 100, 25, 25, color = "Pink").start()
-        Barrier(self, 250, 50, 25, 25, color = "Orange").start()
-    
-    def check_press(self, event):      
-        self.keysPressed.add(event.char)
-
-    def check_release(self, event):     
-        self.keysPressed.remove(event.char)
+        #Barrier(50, 200, 25, 25)
 
     def game_loop(self):
 
-        self.newKeys = self.keysPressed - self.lastKeys  
+        # Prepare for player events
+        playerEvents = set()
 
-        for entity in self.activate:
-            entity.start()
-        self.activate.clear()
+        # COllect events TODO make key constants (A-> 97)
+        for event in pygame.event.get():
+            print(event)
+            if event.type == pygame.QUIT:
+                return False
+            if event.type == pygame.KEYDOWN:
+                if event.key == 119:
+                    playerEvents.add(Player.Events.UP)
         
-        for entity in self.entities:
-            entity.check()
+        # Check for keys held down
+        keysHeld = pygame.key.get_pressed()
+        if keysHeld[97]:
+            playerEvents.add(Player.Events.LEFT)
+        if keysHeld[100]:
+            playerEvents.add(Player.Events.RIGHT)
 
-        for entity in self.removal:
-            entity.remove()
-        self.removal.clear()
-        
-        for entity in self.entities:
-            entity.act()
+        # Update sprites
+        # Buffer player
+        self.player.collect(self.barriers, playerEvents)
 
-        for entity in self.redraw:
-            entity.redraw()       
-        self.redraw.clear()
-        
-        self.lastKeys = self.keysPressed.copy()
-        
-        self.root.after(20, self.game_loop)
+        # update all sprites
+        self.allSprites.update()
+
+        # Draw all sprites TODO create color constants
+        self.surface.fill((0,100,200))
+        self.allSprites.draw(self.surface)
+
+        # Blit onto the screen
+        self.screen.blit(self.surface, (0,0))
+
+        # Finish sucsessfully
+        return True
 
 ## Define some top-scope functions
 
@@ -437,17 +426,32 @@ else:
     def debug(*value, sep = " ", end = "\n"):
         return None
 
-# Function that returns topleft bottomright corners based
-# on topleft corner + width/height
-def corners(x, y, width, height):
-    return [x, y, x + width-1, y + height-1]
-
 def main():
+    
+    # Init pygame
     pygame.init()
 
-    spook = Game()
-    spook.game_loop()
-    tk.mainloop()
+    # Create clock
+    clock = pygame.time.Clock()
+
+    # Create screen
+    screen = pygame.display.set_mode((400, 300))
+
+    # Create flag for when game is quit
+    running = True
+
+    # Create game object
+    spook = Game(screen)
+
+    # Run the object
+    while running:
+
+        running = spook.game_loop()
+
+        pygame.display.flip()
+
+        # Make this a config? TODO
+        clock.tick(50)
 
 if __name__ == "__main__":
     main()
