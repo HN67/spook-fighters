@@ -1,17 +1,14 @@
+"""All classes and logic for Spook Fighters game"""
 # Spook Fighters Alpha
 # Authors: Ryan/Kevin
 # GitHub: https://github.com/HN67/spook-fighters
 
 # At some point this should probably be broken into modules?
-# Though the stuff is pretty interconnected (is that an issue?)
+# Though the stuff is pretty interconnected
 
 # Import modules
-from dataclasses import dataclass
 import enum
 from enum import Enum
-
-# tkinter package for graphics
-import tkinter as tk
 
 # Import pygame
 import pygame
@@ -259,6 +256,8 @@ class Player(Entity):
                 # Freeze movement temporarily
                 self.xFreeze = self.wallJumpFreezeTicks
 
+        # TODO add passive wall cling
+
         # Jump code
         if (self.Events.UP in events) and (self.jumps > 0):
 
@@ -286,7 +285,7 @@ class Player(Entity):
 
         # Horizontal wall collision
         if self.collided.x:
-           
+
             # Reset jumps for wall jump
             self.jumps = self.airJumps
 
@@ -298,15 +297,7 @@ class Player(Entity):
             # Cling to wall
             self.ySpeed = 0
 
-        """
-        ## Manage the creation of projectiles
-        #print(self.newPresses)
-        if ("q" in self.game.newKeys):
-            print("blam")
-            self.game.activate.add(Projectile(self.game, self.x, self.y,
-                                              5, 5,
-                                              0, -5, 10, "red"))
-        """
+        # TODO add projectile logic
 
 
 # Basic barrier class
@@ -360,6 +351,7 @@ class Projectile(Entity):
 
 # Main game class (very unrefined)
 class Game:
+    """Main game class for running a game of Spook Fighters"""
 
     def __init__(self, screen):
         ## Main fundamental setup
@@ -381,7 +373,7 @@ class Game:
 
         # Stage floor
         Barrier(pygame.Rect(0, 250, 400, 50), color=Color.GREEN).add(self.allSprites, self.barriers)
-        
+
         # Stage walls
         Barrier(cornerRect(-50, 0, 0, 300)).add(self.allSprites, self.barriers)
         Barrier(cornerRect(400, 0, 450, 300)).add(self.allSprites, self.barriers)
@@ -390,11 +382,16 @@ class Game:
         Barrier(cornerRect(-50, -50, 450, 0)).add(self.allSprites, self.barriers)
 
         # Random blocks in stage
-        Barrier(pygame.Rect(50, 50, 25, 25), color=Color.BLUE).add(self.allSprites, self.barriers)
-        Barrier(pygame.Rect(100, 70, 25, 25), color=Color.RED).add(self.allSprites, self.barriers)
-        Barrier(pygame.Rect(300, 200, 25, 25), color=Color.GREEN).add(self.allSprites, self.barriers)
+        blocks = (
+            Barrier(pygame.Rect(50, 50, 25, 25), color=Color.BLUE),
+            Barrier(pygame.Rect(100, 70, 25, 25), color=Color.RED),
+            Barrier(pygame.Rect(300, 200, 25, 25), color=Color.GREEN),
+        )
+        self.allSprites.add(*blocks)
+        self.barriers.add(*blocks)
 
-    def game_loop(self):
+    def game_update(self):
+        """Represents one update of entire game logic"""
 
         # Prepare for player events
         playerEvents = set()
@@ -407,7 +404,7 @@ class Game:
             if event.type == pygame.KEYDOWN:
                 if event.key == 119:
                     playerEvents.add(Player.Events.UP)
-        
+
         # Check for keys held down
         keysHeld = pygame.key.get_pressed()
         if keysHeld[97]:
@@ -429,7 +426,7 @@ class Game:
         self.allSprites.draw(self.surface)
 
         # Blit onto the screen
-        self.screen.blit(self.surface, (0,0))
+        self.screen.blit(self.surface, (0, 0))
 
         # Finish sucsessfully
         return True
@@ -443,14 +440,17 @@ def cornerRect(left, top, right, bottom):
 
 # Debug info function that can turn off all debug print statements
 if DEBUG_INFO:
-    def debug(*value, sep = " ", end = "\n"):
-        print(*value, sep = sep, end = end)
+    def debug(*value, sep=" ", end="\n"):
+        """Acts the exact same as pythons 'print', but can be disabled by a global"""
+        print(*value, sep=sep, end=end)
 else:
-    def debug(*value, sep = " ", end = "\n"):
+    def debug(*value, sep=" ", end="\n"): #pylint: disable=unused-argument
+        """Acts the exact same as pythons 'print', but can be disabled by a global"""
         return None
 
 def main():
-    
+    """Main function to start the game"""
+
     # Init pygame
     pygame.init()
 
@@ -469,7 +469,7 @@ def main():
     # Run the object
     while running:
 
-        running = spook.game_loop()
+        running = spook.game_update()
 
         pygame.display.flip()
 
