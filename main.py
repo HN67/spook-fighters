@@ -36,6 +36,13 @@ class Dir(Enum):
     DOWN = (0, 1)
     LEFT = (-1, 0)
 
+class Color:
+    """Color RGB constants"""
+    BLACK = (0, 0, 0)
+    WHITE = (0, 0, 0)
+    RED = (255, 0, 0)
+    GREEN = (0, 255, 0)
+    BLUE = (0, 0, 255)
 
 # Base entity class that holds position and size and frames basic methods
 class Entity(pygame.sprite.Sprite):
@@ -224,15 +231,13 @@ class Player(Entity):
 
         # Set x speed if not frozen and on ground
         if self.xFreeze == 0:
-            if self.collided.y:
-
-                # A left D right
-                if self.Events.LEFT in events:
-                    self.xSpeed = -self.speed
-                elif self.Events.RIGHT in events:
-                    self.xSpeed = self.speed
-                else:
-                    self.xSpeed = 0
+            # A left D right
+            if self.Events.LEFT in events:
+                self.xSpeed = -self.speed
+            elif self.Events.RIGHT in events:
+                self.xSpeed = self.speed
+            else:
+                self.xSpeed = 0
         else:
             # Decrease freeze if frozen
             self.xFreeze -= 1
@@ -304,14 +309,19 @@ class Player(Entity):
         """
 
 
-# Basic barrier class with various location means
+# Basic barrier class
 class Barrier(Entity):
-    """Creates barrier, using second point set as relative or fixed (size/corners),
-            Origin is always first set, so second should be greater to prevent odd behavior"""
+    """Creates barrier, using rect and optionally image
+        Color will override image
+    """
 
-    def __init__(self, rect, image=None):
+    def __init__(self, rect, image=None, color=None):
 
         super().__init__(rect, image)
+
+        if color is not None:
+            debug(color)
+            self.image.fill(color)
 
     def update(self):
         pass
@@ -356,15 +366,13 @@ class Game:
         # Reference the window screen
         self.screen = screen
 
-        # Create game surface TODO
+        # Create game surface
         self.surface = pygame.surface.Surface((400, 300))
 
-        # TODO Create SpriteGroups
+        # Create SpriteGroups
         self.allSprites = pygame.sprite.Group()
 
         self.barriers = pygame.sprite.Group()
-
-        # TODO collect key events and pass appropoiate events to player
 
         ## Basic testing
         # Create Player
@@ -372,8 +380,14 @@ class Game:
         self.player.add(self.allSprites)
 
         # Stage floor
-        Barrier(pygame.Rect(0, 250, 400, 50)).add(self.allSprites, self.barriers)
+        Barrier(pygame.Rect(0, 250, 400, 50), color=Color.GREEN).add(self.allSprites, self.barriers)
         
+        # Stage walls
+        Barrier(cornerRect(-50, 0, 0, 300)).add(self.allSprites, self.barriers)
+        Barrier(cornerRect(400, 0, 450, 300)).add(self.allSprites, self.barriers)
+
+        # Stage ceiling
+        Barrier(cornerRect(-50, -50, 450, 0)).add(self.allSprites, self.barriers)
 
         # Random blocks in stage
         #Barrier(50, 200, 25, 25)
@@ -407,7 +421,7 @@ class Game:
         self.allSprites.update()
 
         # Draw all sprites TODO create color constants
-        self.surface.fill((0,100,200))
+        self.surface.fill((0, 100, 200))
         self.allSprites.draw(self.surface)
 
         # Blit onto the screen
@@ -417,6 +431,11 @@ class Game:
         return True
 
 ## Define some top-scope functions
+# Function to produce a corner-rect
+def cornerRect(left, top, right, bottom):
+    """Creates a Rect using corners"""
+    return pygame.Rect(left, top, right - left, bottom - top)
+
 
 # Debug info function that can turn off all debug print statements
 if DEBUG_INFO:
