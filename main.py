@@ -284,13 +284,13 @@ class Player(Entity):
         # wall hang logic
         # TODO split left and right into seperate
         if self.touching(barriers, Dir.LEFT) or self.touching(barriers, Dir.RIGHT):
-            
+
             # Slow gravity (no acceleration)
             self.ySpeed = self.slide
 
             # Only wall jump if clinging
             if self.Events.LEFT in events or self.Events.RIGHT in events:
-                
+
                 pass
 
             # Wall jump
@@ -421,22 +421,27 @@ class Game:
         self.player = Player(pygame.Rect(25, 25, 20, 20), 3, 9, 1, 0.5)
         self.player.add(self.allSprites)
 
-        # Stage floor
-        Barrier(pygame.Rect(0, 250, 400, 50), color=Color.DARKGREEN).add(self.allSprites, self.barriers)
 
-        # Stage walls
-        Barrier(cornerRect(-50, 0, 0, 300)).add(self.allSprites, self.barriers)
-        Barrier(cornerRect(400, 0, 450, 300)).add(self.allSprites, self.barriers)
 
-        # Stage ceiling
-        Barrier(cornerRect(-50, -50, 450, 0)).add(self.allSprites, self.barriers)
-
-        # Random blocks in stage
+        # Create Barriers
         blocks = (
+
+            # Stage floor
+            Barrier(pygame.Rect(0, 250, 400, 50), color=Color.DARKGREEN),
+
+            # Stage walls
+            Barrier(cornerRect(-50, 0, 0, 300)),
+            Barrier(cornerRect(400, 0, 450, 300)),
+
+            # Stage ceiling
+            Barrier(cornerRect(-50, -50, 450, 0)),
+
+            # Random blocks
             Barrier(pygame.Rect(50, 50, 25, 25), color=Color.BLUE),
             Barrier(pygame.Rect(100, 70, 25, 25), color=Color.RED),
             Barrier(pygame.Rect(300, 200, 25, 50), color=Color.PURPLE),
             Barrier(pygame.Rect(150, 200, 25, 25), color=Color.ORANGE),
+
         )
         self.allSprites.add(*blocks)
         self.barriers.add(*blocks)
