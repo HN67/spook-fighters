@@ -37,9 +37,18 @@ class Color:
     """Color RGB constants"""
     BLACK = (0, 0, 0)
     WHITE = (0, 0, 0)
+
     RED = (255, 0, 0)
     GREEN = (0, 255, 0)
     BLUE = (0, 0, 255)
+
+    YELLOW = (255, 255, 0)
+    ORANGE = (255, 125, 0)
+    PURPLE = (255, 255, 0)
+
+    DARKGREEN = (0, 127, 0)
+
+    SKYBLUE = (0, 200, 200)
 
 # Base entity class that holds position and size and frames basic methods
 class Entity(pygame.sprite.Sprite):
@@ -75,6 +84,30 @@ class Entity(pygame.sprite.Sprite):
             self.rect.left = entity.rect.right
         else:
             raise ValueError(f"Invalid direction {direction}")
+
+    def touching(self, entities, direction: Dir):
+        """Checks if this Entity is aligned with any entities"""
+        # Create ghost
+        ghost = Entity(self.rect.copy())
+
+        # Change hitbox of ghost based on direction
+        if direction == Dir.UP:
+            ghost.rect.height = 1
+            ghost.rect.bottom = self.rect.top
+        elif direction == Dir.DOWN:
+            ghost.rect.height = 1
+            ghost.rect.top = self.rect.bottom
+        elif direction == Dir.LEFT:
+            ghost.rect.width = 1
+            ghost.rect.right = self.rect.left
+        elif direction == Dir.RIGHT:
+            ghost.rect.width = 1
+            ghost.rect.left = self.rect.right
+        else:
+            raise ValueError(f"Invalid direction {direction}")
+
+        # Return whether there was a collision
+        return ghost.collisions(entities)
 
     def collisions(self, entities):
         """Checks if self collides with every entity in 'entities'"""
@@ -195,6 +228,9 @@ class Player(Entity):
         # TODO Another static
         self.wallJumpFreezeTicks = 5
 
+        # TODO static, Speed of sliding down wall
+        self.slide = 1
+
         # Construct dynamic variables
         # Dynamic current xSpeed
         self.xSpeed = 0
@@ -229,7 +265,7 @@ class Player(Entity):
         barriers = self.collected["barriers"]
         events = self.collected["events"]
 
-        # Set x speed if not frozen and on ground
+        # Set x speed if not frozen
         if self.xFreeze == 0:
             # A left D right
             if self.Events.LEFT in events:
@@ -242,14 +278,20 @@ class Player(Entity):
             # Decrease freeze if frozen
             self.xFreeze -= 1
 
-        # Add fast fall pull
-        self.ySpeed += (self.fall if (self.Events.DOWN in events) else 0)
-
         # Add gravity pull
         self.ySpeed += self.gravity
 
-        # wall input code
-        if self.collided.x:
+        # wall hang logic
+        # TODO split left and right into seperate
+        if self.touching(barriers, Dir.LEFT) or self.touching(barriers, Dir.RIGHT):
+            
+            # Slow gravity (no acceleration)
+            self.ySpeed = self.slide
+
+            # Only wall jump if clinging
+            if self.Events.LEFT in events or self.Events.RIGHT in events:
+                
+                pass
 
             # Wall jump
             if self.Events.UP in events:
@@ -259,13 +301,15 @@ class Player(Entity):
                 # Freeze movement temporarily
                 self.xFreeze = self.wallJumpFreezeTicks
 
-        # TODO add passive wall cling
+        # Add fast fall pull
+        if self.Events.DOWN in events:
+            self.ySpeed += self.fall
 
         # Jump code
         if (self.Events.UP in events) and (self.jumps > 0):
 
             # Decrement jump counter if in air
-            if not self.collided.y:
+            if not self.touching(barriers, Dir.DOWN): #TODO broken for some reason
                 self.jumps -= 1
             # Set y-velocity
             self.ySpeed = -1*self.jump
@@ -374,11 +418,11 @@ class Game:
         ## Basic testing
         # Create Player
         # TODO whole bunch of statics
-        self.player = Player(pygame.Rect(25, 25, 20, 20), 5, 12, 1, 1.0)
+        self.player = Player(pygame.Rect(25, 25, 20, 20), 3, 9, 1, 0.5)
         self.player.add(self.allSprites)
 
         # Stage floor
-        Barrier(pygame.Rect(0, 250, 400, 50), color=Color.GREEN).add(self.allSprites, self.barriers)
+        Barrier(pygame.Rect(0, 250, 400, 50), color=Color.DARKGREEN).add(self.allSprites, self.barriers)
 
         # Stage walls
         Barrier(cornerRect(-50, 0, 0, 300)).add(self.allSprites, self.barriers)
@@ -391,8 +435,8 @@ class Game:
         blocks = (
             Barrier(pygame.Rect(50, 50, 25, 25), color=Color.BLUE),
             Barrier(pygame.Rect(100, 70, 25, 25), color=Color.RED),
-            Barrier(pygame.Rect(300, 200, 25, 50), color=Color.GREEN),
-            Barrier(pygame.Rect(150, 200, 25, 25), color=Color.GREEN),
+            Barrier(pygame.Rect(300, 200, 25, 50), color=Color.PURPLE),
+            Barrier(pygame.Rect(150, 200, 25, 25), color=Color.ORANGE),
         )
         self.allSprites.add(*blocks)
         self.barriers.add(*blocks)
@@ -429,7 +473,7 @@ class Game:
         self.allSprites.update()
 
         # Draw all sprites TODO create color constants
-        self.surface.fill((0, 100, 200))
+        self.surface.fill(Color.SKYBLUE)
         self.allSprites.draw(self.surface)
 
         # Blit onto the screen
@@ -467,6 +511,9 @@ def main():
     # Create screen
     # TODO make config for sizes and set window title
     screen = pygame.display.set_mode((400, 300))
+
+    # Set captions
+    pygame.display.set_caption("Spook Fighters Py")
 
     # Create flag for when game is quit
     running = True
