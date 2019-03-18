@@ -44,7 +44,7 @@ class Color:
 
     YELLOW = (255, 255, 0)
     ORANGE = (255, 125, 0)
-    PURPLE = (255, 255, 0)
+    PURPLE = (255, 0, 255)
 
     DARKGREEN = (0, 127, 0)
 
@@ -441,7 +441,7 @@ class Game:
             # Random blocks
             Barrier(pygame.Rect(50, 50, 25, 25), color=Color.BLUE),
             Barrier(pygame.Rect(100, 70, 25, 25), color=Color.RED),
-            Barrier(pygame.Rect(300, 200, 25, 50), color=Color.PURPLE),
+            Barrier(pygame.Rect(300, 200, 25, 50), color=Color.YELLOW),
             Barrier(pygame.Rect(150, 200, 25, 25), color=Color.ORANGE),
 
         )
