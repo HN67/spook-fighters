@@ -447,7 +447,7 @@ class Game:
         self.barriers.add(*blocks)
 
     def game_update(self):
-        """Represents one update of entire game logic"""
+        """Represents one update of entire game logic, returns False once the game is over"""
 
         # Prepare for player events
         playerEvents = set()
