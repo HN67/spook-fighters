@@ -282,24 +282,9 @@ class Player(Entity):
         self.ySpeed += self.gravity
 
         # wall hang logic
-        # TODO split left and right into seperate
         if self.touching(barriers, Dir.LEFT) or self.touching(barriers, Dir.RIGHT):
-
-            # Slow gravity (no acceleration)
+            # Slow falling 
             self.ySpeed = self.slide
-
-            # Only wall jump if clinging
-            if self.Events.LEFT in events or self.Events.RIGHT in events:
-
-                pass
-
-            # Wall jump
-            if self.Events.UP in events:
-
-                # Set speed away from wall
-                self.xSpeed = -self.cling * self.speed
-                # Freeze movement temporarily
-                self.xFreeze = self.wallJumpFreezeTicks
 
         # Add fast fall pull
         if self.Events.DOWN in events:
@@ -309,12 +294,29 @@ class Player(Entity):
         if (self.Events.UP in events) and (self.jumps > 0):
 
             # Decrement jump counter if in air
-            if not self.touching(barriers, Dir.DOWN): #TODO broken for some reason
+            if not self.touching(barriers, Dir.DOWN):
                 self.jumps -= 1
             # Set y-velocity
-            self.ySpeed = -1*self.jump
+            self.ySpeed = -self.jump
 
-            debug("jump", self.collided.y, self.jumps)
+            # Wall jump
+            # Left wall
+            if self.touching(barriers, Dir.LEFT):
+                
+                # Move right
+                self.xSpeed = self.speed
+
+                # Freeze movement temporarily
+                self.xFreeze = self.wallJumpFreezeTicks
+                
+            # Right wall
+            elif self.touching(barriers, Dir.RIGHT):
+
+                # Move left
+                self.xSpeed = -self.speed
+
+                # Freeze movement temporarily
+                self.xFreeze = self.wallJumpFreezeTicks
 
         # TODO probably break function here and move rest into another (move or something)
 
