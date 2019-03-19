@@ -489,16 +489,16 @@ class Game:
             if event.type == pygame.QUIT:
                 return False
             if event.type == pygame.KEYDOWN:
-                if event.key == 119:
+                if event.key == Config.player.keys1.UP:
                     playerEvents.add(Player.Events.UP)
 
         # Check for keys held down
         keysHeld = pygame.key.get_pressed()
-        if keysHeld[97]:
+        if keysHeld[Config.player.keys1.LEFT]:
             playerEvents.add(Player.Events.LEFT)
-        if keysHeld[100]:
+        if keysHeld[Config.player.keys1.RIGHT]:
             playerEvents.add(Player.Events.RIGHT)
-        if keysHeld[115]:
+        if keysHeld[Config.player.keys1.DOWN]:
             playerEvents.add(Player.Events.DOWN)
 
         # Update sprites

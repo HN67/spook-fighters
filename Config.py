@@ -1,6 +1,9 @@
 """Config file"""
 # Config file for Spook Fighters Py
 
+# Import Core
+import Core
+
 class game:
     """General configuration for the game"""
 
@@ -23,8 +26,27 @@ class player:
     height = 50
     width = 50
     
-    class keys:
-        pass
+    # Keyset for Player 1
+    keys1 = Core.Keyset(
+
+        UP=119,
+        DOWN=115,
+        LEFT=97,
+        RIGHT=100,
+        ACTION=113,
+
+    )
+
+    # Keyset for Player 2
+    keys2 = Core.Keyset(
+
+        UP=273,
+        DOWN=274,
+        RIGHT=275,
+        LEFT=276,
+        ACTION=47,
+
+    )
 
     # Attributes
     speed = 7
