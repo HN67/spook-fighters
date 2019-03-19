@@ -210,8 +210,12 @@ class Player(Entity):
         LEFT = enum.auto()
         RIGHT = enum.auto()
 
-    def __init__(self, rect, speed, jump, fall, gravity):
+    def __init__(self, rect, speed, jump, fall, gravity, *, color=None):
         super().__init__(rect)
+
+        # Set color
+        if color is not None:
+            self.image.fill(color)
 
         # Reference parameters
         # Movement speed (horizontal)
@@ -226,7 +230,7 @@ class Player(Entity):
 
         # Number of max air jumps
         # TODO hello this is static again
-        self.airJumps = 2
+        self.airJumps = 1
         # Constant for length of wallJump freeze
         # TODO Another static
         self.wallJumpFreezeTicks = 5
@@ -297,7 +301,9 @@ class Player(Entity):
         if (self.Events.UP in events) and (self.jumps > 0):
 
             # Decrement jump counter if in air
-            if not self.touching(barriers, Dir.DOWN):
+            if not (self.touching(barriers, Dir.DOWN) or
+                    self.touching(barriers, Dir.LEFT) or
+                    self.touching(barriers, Dir.RIGHT)):
                 self.jumps -= 1
             # Set y-velocity
             self.ySpeed = -self.jump
@@ -413,7 +419,7 @@ class Game:
         self.screen = screen
 
         # Create game surface
-        self.surface = pygame.surface.Surface((400, 300))
+        self.surface = pygame.surface.Surface((Config.game.width, Config.game.height))
 
         # Create SpriteGroups
         self.allSprites = pygame.sprite.Group()
@@ -423,29 +429,49 @@ class Game:
         ## Basic testing
         # Create Player
         # TODO whole bunch of statics
-        self.player = Player(pygame.Rect(25, 25, 20, 20), 3, 9, 1, 0.5)
+        self.player = Player(
+            pygame.Rect(
+                Config.game.width / 2 - Config.player.width / 2,
+                Config.game.height - Config.stage.floorHeight - 2*Config.player.height,
+                Config.player.width, Config.player.height,
+            ),
+            Config.player.speed, Config.player.jump,
+            Config.player.fastfall, Config.player.gravity,
+            color=Color.ORANGE,
+        )
         self.player.add(self.allSprites)
 
 
 
         # Create Barriers
         blocks = (
+            
+            # Screen borders
+            # Stage bottom border
+            Barrier(cornerRect(-100, Config.game.height,
+                               Config.game.width + 100, Config.game.height + 100)),
 
-            # Stage floor
-            Barrier(pygame.Rect(0, 250, 400, 50), color=Color.DARKGREEN),
+            # Stage wall borders
+            Barrier(cornerRect(-100, 0, 0, Config.game.height)), # LEFT
+            Barrier(cornerRect(Config.game.width, 0,
+                               Config.game.width + 100, Config.game.height)), # RIGHT
 
-            # Stage walls
-            Barrier(cornerRect(-50, 0, 0, 300)),
-            Barrier(cornerRect(400, 0, 450, 300)),
+            # Stage ceiling border
+            Barrier(cornerRect(-100, -100, Config.game.width + 100, 0)),
 
-            # Stage ceiling
-            Barrier(cornerRect(-50, -50, 450, 0)),
+            # Floor/ground
+            Barrier(cornerRect(0, Config.game.height - Config.stage.floorHeight,
+                               Config.game.width, Config.game.height),
+                    color=Color.DARKGREEN),
 
-            # Random blocks
-            Barrier(pygame.Rect(50, 50, 25, 25), color=Color.BLUE),
-            Barrier(pygame.Rect(100, 70, 25, 25), color=Color.RED),
-            Barrier(pygame.Rect(300, 200, 25, 50), color=Color.YELLOW),
-            Barrier(pygame.Rect(150, 200, 25, 25), color=Color.ORANGE),
+            # Floating blocks
+            #Barrier(pygame.Rect(50, 50, 25, 25), color=Color.BLUE),
+            #Barrier(pygame.Rect(100, 70, 25, 25), color=Color.RED),
+            #Barrier(pygame.Rect(300, 200, 25, 50), color=Color.GREEN),
+            #Barrier(pygame.Rect(150, 200, 25, 25), color=Color.ORANGE),
+
+            Barrier(pygame.Rect(Config.game.width/2 - 200, 200,
+                                400, 100), color = Color.DARKGREEN),
 
         )
         self.allSprites.add(*blocks)
