@@ -3,3 +3,7 @@
 
 # Ignore pycache of custom moduels
 __pycache__/
+
+# Ignore build folder and spec file
+build/
+main.spec

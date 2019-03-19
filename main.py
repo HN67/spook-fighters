@@ -230,7 +230,7 @@ class Player(Entity):
 
         # Number of max air jumps
         # TODO hello this is static again
-        self.airJumps = 1
+        self.airJumps = 2
         # Constant for length of wallJump freeze
         # TODO Another static
         self.wallJumpFreezeTicks = 5
