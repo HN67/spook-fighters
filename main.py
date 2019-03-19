@@ -1,5 +1,5 @@
 """All classes and logic for Spook Fighters game"""
-# Spook Fighters Alpha
+# Spook Fighters Py
 # Authors: Ryan/Kevin
 # GitHub: https://github.com/HN67/spook-fighters
 
@@ -12,6 +12,9 @@ from enum import Enum
 
 # Import pygame
 import pygame
+
+# Import config file
+import Config
 
 # Module level constants
 # Determines if debug info is shown
@@ -517,10 +520,10 @@ def main():
 
     # Create screen
     # TODO make config for sizes and set window title
-    screen = pygame.display.set_mode((400, 300))
+    screen = pygame.display.set_mode((Config.game.width, Config.game.height))
 
     # Set captions
-    pygame.display.set_caption("Spook Fighters Py")
+    pygame.display.set_caption(Config.game.name)
 
     # Create flag for when game is quit
     running = True
