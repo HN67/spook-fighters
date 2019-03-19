@@ -1,2 +1,5 @@
 # Ignore pylint config file
 .pylintrc
+
+# Ignore pycache of custom moduels
+__pycache__/
