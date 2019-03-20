@@ -429,7 +429,7 @@ class Game:
         ## Basic testing
         # Create Player
         # TODO whole bunch of statics
-        self.player = Player(
+        self.player1 = Player(
             pygame.Rect(
                 Config.game.width / 2 - Config.player.width / 2,
                 Config.game.height - Config.stage.floorHeight - 2*Config.player.height,
@@ -439,7 +439,19 @@ class Game:
             Config.player.fastfall, Config.player.gravity,
             color=Color.ORANGE,
         )
-        self.player.add(self.allSprites)
+        self.player1.add(self.allSprites)
+
+        self.player2 = Player(
+            pygame.Rect(
+                Config.game.width / 2 - Config.player.width / 2 + 100,
+                Config.game.height - Config.stage.floorHeight - 2*Config.player.height,
+                Config.player.width, Config.player.height,
+            ),
+            Config.player.speed, Config.player.jump,
+            Config.player.fastfall, Config.player.gravity,
+            color=Color.BLUE,
+        )
+        self.player2.add(self.allSprites)
 
 
 
@@ -481,7 +493,9 @@ class Game:
         """Represents one update of entire game logic, returns False once the game is over"""
 
         # Prepare for player events
-        playerEvents = set()
+        player1Events = set()
+
+        player2Events = set()
 
         # COllect events TODO make key constants (A-> 97)
         for event in pygame.event.get():
@@ -490,20 +504,30 @@ class Game:
                 return False
             if event.type == pygame.KEYDOWN:
                 if event.key == Config.player.keys1.UP:
-                    playerEvents.add(Player.Events.UP)
+                    player1Events.add(Player.Events.UP)
+                elif event.key == Config.player.keys2.UP:
+                    player2Events.add(Player.Events.UP)
 
         # Check for keys held down
         keysHeld = pygame.key.get_pressed()
         if keysHeld[Config.player.keys1.LEFT]:
-            playerEvents.add(Player.Events.LEFT)
+            player1Events.add(Player.Events.LEFT)
         if keysHeld[Config.player.keys1.RIGHT]:
-            playerEvents.add(Player.Events.RIGHT)
+            player1Events.add(Player.Events.RIGHT)
         if keysHeld[Config.player.keys1.DOWN]:
-            playerEvents.add(Player.Events.DOWN)
+            player1Events.add(Player.Events.DOWN)
+
+        if keysHeld[Config.player.keys2.LEFT]:
+            player2Events.add(Player.Events.LEFT)
+        if keysHeld[Config.player.keys2.RIGHT]:
+            player2Events.add(Player.Events.RIGHT)
+        if keysHeld[Config.player.keys2.DOWN]:
+            player2Events.add(Player.Events.DOWN)
 
         # Update sprites
         # Buffer player
-        self.player.collect(self.barriers, playerEvents)
+        self.player1.collect(self.barriers, player1Events)
+        self.player2.collect(self.barriers, player2Events)
 
         # update all sprites
         self.allSprites.update()
