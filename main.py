@@ -315,7 +315,7 @@ class Player(Entity):
 
         # wall hang logic
         if self.touching(barriers, Dir.LEFT) or self.touching(barriers, Dir.RIGHT):
-            # Slow falling 
+            # Slow falling
             self.ySpeed = self.slide
 
         # Add fast fall pull
@@ -336,13 +336,13 @@ class Player(Entity):
             # Wall jump
             # Left wall
             if self.touching(barriers, Dir.LEFT):
-                
+
                 # Move right
                 self.xSpeed = self.speed
 
                 # Freeze movement temporarily
                 self.xFreeze = self.wallJumpFreezeTicks
-                
+
             # Right wall
             elif self.touching(barriers, Dir.RIGHT):
 
@@ -484,7 +484,7 @@ class Game:
 
         # Create Barriers
         blocks = (
-            
+
             # Screen borders
             # Stage bottom border
             Barrier(cornerRect(-100, Config.game.height,
@@ -510,7 +510,7 @@ class Game:
             #Barrier(pygame.Rect(150, 200, 25, 25), color=Color.ORANGE),
 
             Barrier(pygame.Rect(Config.game.width/2 - 200, 200,
-                                400, 100), color = Color.DARKGREEN),
+                                400, 100), color=Color.DARKGREEN),
 
         )
         self.allSprites.add(*blocks)
