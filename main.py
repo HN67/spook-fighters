@@ -16,6 +16,9 @@ import pygame
 # Import config file
 import Config
 
+# Import core file
+import Core
+
 # Module level constants
 # Determines if debug info is shown
 DEBUG_INFO = True
@@ -91,7 +94,8 @@ class Entity(pygame.sprite.Sprite):
     def touching(self, entities, direction: Dir):
         """Checks if this Entity is aligned with any entities"""
         # Create ghost
-        ghost = Entity(self.rect.copy())
+        ghost = Ghost(self)
+        ghost.rect = self.rect.copy()
 
         # Change hitbox of ghost based on direction
         if direction == Dir.UP:
@@ -113,14 +117,14 @@ class Entity(pygame.sprite.Sprite):
         return ghost.collisions(entities)
 
     def collisions(self, entities):
-        """Checks if self collides with every entity in 'entities'"""
-        return pygame.sprite.spritecollide(self, entities, False)
+        """Checks if self collides with every entity in group 'entities'"""
+        return pygame.sprite.spritecollide(self, entities, False, collided=Core.collides)
 
     def move(self, dX: int, dY: int, entities):
         """Moves to a new position and takes into account collisions"""
 
         # Reference current position
-        ghost = Entity(self.rect)
+        ghost = Ghost(self)
 
         # Create collision saver
         collided = Pair(False, False)
@@ -147,7 +151,7 @@ class Entity(pygame.sprite.Sprite):
         future.x = ghost.rect.x
 
         # Reset ghost
-        ghost = Entity(self.rect)
+        ghost = Ghost(self)
 
         # Check Y movement
         ghost.rect.y += dY
@@ -169,7 +173,8 @@ class Entity(pygame.sprite.Sprite):
 
         # Check corner case (literally when collision is only diagonal)
         # Put ghost at future
-        ghost = Entity(future)
+        ghost = Ghost(self)
+        ghost.rect = future
 
         # Check collisions
         collisions = ghost.collisions(entities)
@@ -198,6 +203,27 @@ class Entity(pygame.sprite.Sprite):
         # Return the collided pair
         return collided
 
+# Ghost Entity Class (for collision detection)
+class Ghost(Entity):
+    """Represents a Ghost entity that is an alias of another Entity for collisions"""
+
+    def __init__(self, alias: Entity):
+        super().__init__(alias.rect.copy())
+        
+        # Reference alias
+        self.alias = alias
+
+    def collisions(self, entities):
+        """Checks for collisions in SpriteGroup, not colliding with self or alias"""
+        return pygame.sprite.spritecollide(self, entities, False, collided=self._collides)
+
+    def _collides(self, this, other):
+        """For use with the collisions method"""
+        return (
+            (this is not other) # Not colliding with the ghost somehow
+            and (other is not self.alias) # Will not collide with the alias
+            and (pygame.sprite.collide_rect(this, other)) # Actual collision detection
+        )
 
 # Basic testing class
 class Player(Entity):
@@ -451,10 +477,13 @@ class Game:
 
         self.barriers = pygame.sprite.Group()
 
+        self.players = pygame.sprite.Group()
+
+        self.solids = pygame.sprite.Group()
+
         ## Basic testing
         # Create Players
         # TODO whole bunch of statics
-        self.players = pygame.sprite.Group()
         players = (
             Player(
                 pygame.Rect(
@@ -481,6 +510,7 @@ class Game:
         )
         self.allSprites.add(*players)
         self.players.add(*players)
+        self.solids.add(*players)
 
         # Create Barriers
         blocks = (
@@ -515,6 +545,7 @@ class Game:
         )
         self.allSprites.add(*blocks)
         self.barriers.add(*blocks)
+        self.solids.add(*blocks)
 
     def game_update(self):
         """Represents one update of entire game logic, returns False once the game is over"""
@@ -534,7 +565,9 @@ class Game:
         # Update sprites
         # Buffer players
         for player in self.players:
-            player.collect(self.barriers, events, keysHeld)
+            # Give solid sprites for collisions, all events collected, and the keys currently held down
+            # The sprites are used for collisions, and events/keys for movement and action
+            player.collect(self.solids, events, keysHeld)
 
         # update all sprites
         self.allSprites.update()
