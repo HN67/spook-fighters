@@ -209,7 +209,7 @@ class Ghost(Entity):
 
     def __init__(self, alias: Entity):
         super().__init__(alias.rect.copy())
-        
+
         # Reference alias
         self.alias = alias
 
@@ -225,6 +225,10 @@ class Ghost(Entity):
             and (pygame.sprite.collide_rect(this, other)) # Actual collision detection
         )
 
+    def update(self):
+        """Updates the entity"""
+        raise NotImplementedError(f"{type(self)} does not update")
+
 # Basic testing class
 class Player(Entity):
     """This represents a controllable player"""
@@ -235,6 +239,8 @@ class Player(Entity):
         DOWN = enum.auto()
         LEFT = enum.auto()
         RIGHT = enum.auto()
+
+        ACTION = enum.auto()
 
     def __init__(self, rect, speed, jump, fall, gravity, *, color=None, keyset):
         super().__init__(rect)
@@ -267,10 +273,12 @@ class Player(Entity):
         # Construct dynamic variables
         # Dynamic current xSpeed
         self.xSpeed = 0
-        # Direction of last wall-cling
-        self.cling = 0
+
         # Freeze prevents movement for an amount of ticks
         self.xFreeze = 0
+
+        # Setup which direction you are facing
+        self.xDirection = None
 
         # Current ySpeed
         self.ySpeed = 0
@@ -310,6 +318,8 @@ class Player(Entity):
             if event.type == pygame.KEYDOWN:
                 if event.key == self.keyset.UP:
                     playerEvents.add(Player.Events.UP)
+                elif event.key == self.keyset.ACTION:
+                    playerEvents.add(Player.Events.ACTION)
 
         # Add player events to collected
         self.collected["events"] = playerEvents
@@ -327,9 +337,15 @@ class Player(Entity):
         if self.xFreeze == 0:
             # A left D right
             if self.Events.LEFT in events:
+                # Set speed
                 self.xSpeed = -self.speed
+                # Remember direction
+                self.xDirection = Dir.LEFT
             elif self.Events.RIGHT in events:
+                # Set speed
                 self.xSpeed = self.speed
+                # Remember direction
+                self.xDirection = Dir.RIGHT
             else:
                 self.xSpeed = 0
         else:
@@ -378,7 +394,8 @@ class Player(Entity):
                 # Freeze movement temporarily
                 self.xFreeze = self.wallJumpFreezeTicks
 
-        # TODO probably break function here and move rest into another (move or something)
+        # TODO probably break function here and move rest into another (move or something
+        # TODO maybe dont do that but this update() should be broken into logical components
 
         # Move with collisions enabled
         self.collided = self.move(self.xSpeed, self.ySpeed, barriers)
@@ -400,15 +417,17 @@ class Player(Entity):
             # Reset jumps for wall jump
             self.jumps = self.airJumps
 
-            # Determine direction of collision
-            self.cling = abs(self.xSpeed)/self.xSpeed
-
             # Zero horizontal speed due to wall collision
             self.xSpeed = 0
             # Cling to wall
             self.ySpeed = 0
 
-        # TODO add projectile logic
+        # Projectile code
+
+        # Action event
+        if self.Events.ACTION in events:
+            # Create projectile, but how? Dont have acsess to Game, yet
+            pass
 
 
 # Basic barrier class
@@ -455,8 +474,10 @@ class Projectile(Entity):
         self.rect.x += self.xSpeed
         self.rect.y += self.ySpeed
 
-        # Return False when 'dead'
-        return self.age > 0
+        # Die at end of lifespan
+        if self.age == 0:
+            # Remove from spritegroups
+            self.kill()
 
 
 
@@ -565,7 +586,8 @@ class Game:
         # Update sprites
         # Buffer players
         for player in self.players:
-            # Give solid sprites for collisions, all events collected, and the keys currently held down
+            # Give solid sprites for collisions, all events collected,
+            # and the keys currently held down
             # The sprites are used for collisions, and events/keys for movement and action
             player.collect(self.solids, events, keysHeld)
 
