@@ -210,7 +210,7 @@ class Player(Entity):
         LEFT = enum.auto()
         RIGHT = enum.auto()
 
-    def __init__(self, rect, speed, jump, fall, gravity, *, color=None):
+    def __init__(self, rect, speed, jump, fall, gravity, *, color=None, keyset):
         super().__init__(rect)
 
         # Set color
@@ -257,11 +257,36 @@ class Player(Entity):
         # Data collected by collect()
         self.collected = {"barriers": None, "events": None}
 
+        # Reference keyset
+        self.keyset = keyset
 
-    def collect(self, barriers, events):
-        """Give barrier list and events (Player.Events) to be used next update()"""
 
-        self.collected = {"barriers": barriers, "events": events}
+    def collect(self, barriers, events, keysHeld):
+        """Give barrier list and events and keys held to be used next update()"""
+
+        # Refresh collected dictionary
+        # Pass barriers
+        self.collected = {"barriers": barriers}
+
+        # Create player events set
+        playerEvents = set()
+
+        # Check for held keys (LEFT/RIGHT/DOWN)
+        if keysHeld[self.keyset.LEFT]:
+            playerEvents.add(Player.Events.LEFT)
+        if keysHeld[self.keyset.RIGHT]:
+            playerEvents.add(Player.Events.RIGHT)
+        if keysHeld[self.keyset.DOWN]:
+            playerEvents.add(Player.Events.DOWN)
+
+        # Check for pressed keys (UP)
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == self.keyset.UP:
+                    playerEvents.add(Player.Events.UP)
+
+        # Add player events to collected
+        self.collected["events"] = playerEvents
 
 
     def update(self):
@@ -427,33 +452,35 @@ class Game:
         self.barriers = pygame.sprite.Group()
 
         ## Basic testing
-        # Create Player
+        # Create Players
         # TODO whole bunch of statics
-        self.player1 = Player(
-            pygame.Rect(
-                Config.game.width / 2 - Config.player.width / 2,
-                Config.game.height - Config.stage.floorHeight - 2*Config.player.height,
-                Config.player.width, Config.player.height,
+        self.players = pygame.sprite.Group()
+        players = (
+            Player(
+                pygame.Rect(
+                    Config.game.width / 2 - Config.player.width / 2,
+                    Config.game.height - Config.stage.floorHeight - 2*Config.player.height,
+                    Config.player.width, Config.player.height,
+                ),
+                Config.player.speed, Config.player.jump,
+                Config.player.fastfall, Config.player.gravity,
+                color=Color.ORANGE,
+                keyset=Config.player.keys1,
             ),
-            Config.player.speed, Config.player.jump,
-            Config.player.fastfall, Config.player.gravity,
-            color=Color.ORANGE,
+            Player(
+                pygame.Rect(
+                    Config.game.width / 2 - Config.player.width / 2 + 100,
+                    Config.game.height - Config.stage.floorHeight - 2*Config.player.height,
+                    Config.player.width, Config.player.height,
+                ),
+                Config.player.speed, Config.player.jump,
+                Config.player.fastfall, Config.player.gravity,
+                color=Color.BLUE,
+                keyset=Config.player.keys2,
+            )
         )
-        self.player1.add(self.allSprites)
-
-        self.player2 = Player(
-            pygame.Rect(
-                Config.game.width / 2 - Config.player.width / 2 + 100,
-                Config.game.height - Config.stage.floorHeight - 2*Config.player.height,
-                Config.player.width, Config.player.height,
-            ),
-            Config.player.speed, Config.player.jump,
-            Config.player.fastfall, Config.player.gravity,
-            color=Color.BLUE,
-        )
-        self.player2.add(self.allSprites)
-
-
+        self.allSprites.add(*players)
+        self.players.add(*players)
 
         # Create Barriers
         blocks = (
@@ -492,42 +519,22 @@ class Game:
     def game_update(self):
         """Represents one update of entire game logic, returns False once the game is over"""
 
-        # Prepare for player events
-        player1Events = set()
-
-        player2Events = set()
-
-        # COllect events TODO make key constants (A-> 97)
-        for event in pygame.event.get():
+        # COllect events
+        events = pygame.event.get()
+        for event in events:
             print(event)
             if event.type == pygame.QUIT:
                 return False
             if event.type == pygame.KEYDOWN:
-                if event.key == Config.player.keys1.UP:
-                    player1Events.add(Player.Events.UP)
-                elif event.key == Config.player.keys2.UP:
-                    player2Events.add(Player.Events.UP)
+                pass
 
         # Check for keys held down
         keysHeld = pygame.key.get_pressed()
-        if keysHeld[Config.player.keys1.LEFT]:
-            player1Events.add(Player.Events.LEFT)
-        if keysHeld[Config.player.keys1.RIGHT]:
-            player1Events.add(Player.Events.RIGHT)
-        if keysHeld[Config.player.keys1.DOWN]:
-            player1Events.add(Player.Events.DOWN)
-
-        if keysHeld[Config.player.keys2.LEFT]:
-            player2Events.add(Player.Events.LEFT)
-        if keysHeld[Config.player.keys2.RIGHT]:
-            player2Events.add(Player.Events.RIGHT)
-        if keysHeld[Config.player.keys2.DOWN]:
-            player2Events.add(Player.Events.DOWN)
 
         # Update sprites
-        # Buffer player
-        self.player1.collect(self.barriers, player1Events)
-        self.player2.collect(self.barriers, player2Events)
+        # Buffer players
+        for player in self.players:
+            player.collect(self.barriers, events, keysHeld)
 
         # update all sprites
         self.allSprites.update()
