@@ -242,7 +242,11 @@ class Player(Entity):
 
         ACTION = enum.auto()
 
-    def __init__(self, rect, speed, jump, fall, gravity, *, color=None, keyset):
+    def __init__(self, rect,
+                 speed, jump, fall, gravity,
+                 airJumps, wallJumpFreeze, slide, *, color=None, keyset
+                ):
+
         super().__init__(rect)
 
         # Set color
@@ -251,7 +255,6 @@ class Player(Entity):
 
         # Reference parameters
         # Movement speed (horizontal)
-        # TODO Maybe make horizontal acceleration
         self.speed = speed
         # Jump power
         self.jump = jump
@@ -261,17 +264,17 @@ class Player(Entity):
         self.fall = fall
 
         # Number of max air jumps
-        # TODO hello this is static again
-        self.airJumps = 2
+        # Reference airJumps
+        self.airJumps = airJumps
         # Constant for length of wallJump freeze
-        # TODO Another static
-        self.wallJumpFreezeTicks = 5
+        # Reference wallFreeze
+        self.wallJumpFreezeTicks = wallJumpFreeze
 
-        # TODO static, Speed of sliding down wall
-        self.slide = 1
+        # Reference wallslide
+        self.slide = slide
 
         # Construct dynamic variables
-        # Dynamic current xSpeed
+        # Dynamic current xSpeed for acceleration if needed
         self.xSpeed = 0
 
         # Freeze prevents movement for an amount of ticks
@@ -504,7 +507,7 @@ class Game:
 
         ## Basic testing
         # Create Players
-        # TODO whole bunch of statics
+        # TODO whole bunch of statics maybe its better now but not really for the starting position
         players = (
             Player(
                 pygame.Rect(
@@ -514,6 +517,9 @@ class Game:
                 ),
                 Config.player.speed, Config.player.jump,
                 Config.player.fastfall, Config.player.gravity,
+                airJumps=Config.player.airJumps,
+                wallJumpFreeze=Config.player.wallJumpFreeze,
+                slide=Config.player.slide,
                 color=Color.ORANGE,
                 keyset=Config.player.keys1,
             ),
@@ -525,6 +531,9 @@ class Game:
                 ),
                 Config.player.speed, Config.player.jump,
                 Config.player.fastfall, Config.player.gravity,
+                airJumps=Config.player.airJumps,
+                wallJumpFreeze=Config.player.wallJumpFreeze,
+                slide=Config.player.slide,
                 color=Color.BLUE,
                 keyset=Config.player.keys2,
             )
@@ -533,6 +542,7 @@ class Game:
         self.players.add(*players)
         self.solids.add(*players)
 
+        # TODO statics should at least be moved and created with hooks maybe
         # Create Barriers
         blocks = (
 
@@ -631,7 +641,7 @@ def main():
     clock = pygame.time.Clock()
 
     # Create screen
-    # TODO make config for sizes and set window title
+    # Make screen based on config
     screen = pygame.display.set_mode((Config.game.width, Config.game.height))
 
     # Set captions
@@ -650,9 +660,8 @@ def main():
 
         pygame.display.flip()
 
-        # Frame rate
-        # TODO move to config
-        clock.tick(60)
+        # Frame rate based on config
+        clock.tick(Config.game.fps)
 
 if __name__ == "__main__":
     main()

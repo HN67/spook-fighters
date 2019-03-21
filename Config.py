@@ -14,6 +14,9 @@ class game:
     # Name of the window
     name = "Spook Fighters Py"
 
+    # Frames (ticks) per second max of the game
+    fps = 60
+
 class stage:
     """Config for stage setup"""
 
@@ -21,11 +24,12 @@ class stage:
     floorHeight = 100
 
 class player:
+    """Config for players"""
 
     # Height and width of player
     height = 50
     width = 50
-    
+
     # Keyset for Player 1
     keys1 = Core.Keyset(
 
@@ -53,4 +57,7 @@ class player:
     jump = 17
     fastfall = 2
     gravity = 1 # Should this be a global constant
-        
+
+    airJumps = 2
+    slide = 1
+    wallJumpFreeze = 5
