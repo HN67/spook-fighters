@@ -73,8 +73,8 @@ class Entity(pygame.sprite.Sprite):
         # Reference rect
         self.rect = rect
 
-    def update(self):
-        """Updates the entity"""
+    def update(self, game: "Game"):
+        """Updates the entity, in reference to a Game object"""
         raise NotImplementedError(f"{type(self)} does not update")
 
     def align(self, entity, direction: Dir):
@@ -225,7 +225,7 @@ class Ghost(Entity):
             and (pygame.sprite.collide_rect(this, other)) # Actual collision detection
         )
 
-    def update(self):
+    def update(self, game: "Game"):
         """Updates the entity"""
         raise NotImplementedError(f"{type(self)} does not update")
 
@@ -297,13 +297,8 @@ class Player(Entity):
         # Reference keyset
         self.keyset = keyset
 
-
-    def collect(self, barriers, events, keysHeld):
-        """Give barrier list and events and keys held to be used next update()"""
-
-        # Refresh collected dictionary
-        # Pass barriers
-        self.collected = {"barriers": barriers}
+    def parse_events(self, events, keysHeld):
+        """Parses PyGame events and held keys into Player events using its keyset"""
 
         # Create player events set
         playerEvents = set()
@@ -324,17 +319,16 @@ class Player(Entity):
                 elif event.key == self.keyset.ACTION:
                     playerEvents.add(Player.Events.ACTION)
 
-        # Add player events to collected
-        self.collected["events"] = playerEvents
+        # Return player events
+        return playerEvents
 
-
-    def update(self):
+    def update(self, game: "Game"):
         """Updates the physics of the Player, when colliding with the entities SpriteGroup
            And with events from Player.Events passed in"""
 
         # Reference collected data
-        barriers = self.collected["barriers"]
-        events = self.collected["events"]
+        barriers = game.get_solids()
+        events = self.parse_events(game.get_events(), game.keys_held())
 
         # Set x speed if not frozen
         if self.xFreeze == 0:
@@ -429,8 +423,18 @@ class Player(Entity):
 
         # Action event
         if self.Events.ACTION in events:
-            # Create projectile, but how? Dont have acsess to Game, yet
-            pass
+            # Create projectile on the passed game
+            # TODO Static 5 for displacement and size and speed/life, should be config?
+            if self.xDirection == Dir.RIGHT:
+                game.add_projectiles(Projectile(
+                    pygame.Rect(self.rect.right, self.rect.top, 10, 50),
+                    xSpeed=self.xSpeed + 5, ySpeed=0, lifeSpan=4
+                ))
+            elif self.xDirection == Dir.LEFT:
+                game.add_projectiles(Projectile(
+                    pygame.Rect(self.rect.left - 10, self.rect.top, 10, 50),
+                    xSpeed=self.xSpeed - 5, ySpeed=0, lifeSpan=4
+                ))
 
 
 # Basic barrier class
@@ -447,7 +451,7 @@ class Barrier(Entity):
             debug(color)
             self.image.fill(color)
 
-    def update(self):
+    def update(self, game: "Game"):
         pass
 
 
@@ -469,7 +473,7 @@ class Projectile(Entity):
 
         self.age = lifeSpan
 
-    def update(self):
+    def update(self, game: "Game"):
         # Decrement age
         self.age -= 1
 
@@ -505,6 +509,12 @@ class Game:
 
         self.solids = pygame.sprite.Group()
 
+        self.projectiles = pygame.sprite.Group()
+
+        # Events and keysHeld variables
+        self.events = None
+        self.keysHeld = None
+
         ## Basic testing
         # Create Players
         # TODO whole bunch of statics maybe its better now but not really for the starting position
@@ -538,9 +548,8 @@ class Game:
                 keyset=Config.player.keys2,
             )
         )
-        self.allSprites.add(*players)
-        self.players.add(*players)
-        self.solids.add(*players)
+        self.create_player(players[0])
+        self.create_player(players[1])
 
         # TODO statics should at least be moved and created with hooks maybe
         # Create Barriers
@@ -574,16 +583,14 @@ class Game:
                                 400, 100), color=Color.DARKGREEN),
 
         )
-        self.allSprites.add(*blocks)
-        self.barriers.add(*blocks)
-        self.solids.add(*blocks)
+        self.add_barriers(*blocks)
 
     def game_update(self):
         """Represents one update of entire game logic, returns False once the game is over"""
 
         # COllect events
-        events = pygame.event.get()
-        for event in events:
+        self.events = pygame.event.get()
+        for event in self.events:
             print(event)
             if event.type == pygame.QUIT:
                 return False
@@ -591,20 +598,12 @@ class Game:
                 pass
 
         # Check for keys held down
-        keysHeld = pygame.key.get_pressed()
+        self.keysHeld = pygame.key.get_pressed()
 
-        # Update sprites
-        # Buffer players
-        for player in self.players:
-            # Give solid sprites for collisions, all events collected,
-            # and the keys currently held down
-            # The sprites are used for collisions, and events/keys for movement and action
-            player.collect(self.solids, events, keysHeld)
+        # Update all sprites
+        self.allSprites.update(self)
 
-        # update all sprites
-        self.allSprites.update()
-
-        # Draw all sprites TODO create color constants
+        # Draw all sprites onto sky color
         self.surface.fill(Color.SKYBLUE)
         self.allSprites.draw(self.surface)
 
@@ -613,6 +612,35 @@ class Game:
 
         # Finish sucsessfully
         return True
+
+    def get_events(self):
+        """Returns the PyGame events collected last update"""
+        return self.events
+
+    def keys_held(self):
+        """Returns the keys held as of last update"""
+        return self.keysHeld
+
+    def add_barriers(self, *barriers):
+        """Add barriers to the game"""
+        self.barriers.add(*barriers)
+        self.allSprites.add(*barriers)
+        self.solids.add(*barriers)
+
+    def create_player(self, player):
+        """Add a player to the game"""
+        self.players.add(player)
+        self.allSprites.add(player)
+        self.solids.add(player)
+
+    def add_projectiles(self, *projectiles):
+        """Adds projectiles to the game state"""
+        self.projectiles.add(*projectiles)
+        self.allSprites.add(*projectiles)
+
+    def get_solids(self):
+        """Returns the solid objects (for collisions) of the game"""
+        return self.solids
 
 ## Define some top-scope functions
 # Function to produce a corner-rect
