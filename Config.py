@@ -66,6 +66,7 @@ class projectile:
     """Config for the different projectiles"""
 
     class grab:
+        """Config for grab attack"""
 
         displacement = 0 # Starting distance from player
         width = 10

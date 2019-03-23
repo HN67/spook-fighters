@@ -426,18 +426,17 @@ class Player(Entity):
             # Reference config
             cfg = Config.projectile.grab()
             # Create projectile on the passed game
-            # TODO Static 5 for displacement and size and speed/life, should be config?
             # TODO should this behavior be defined here, or another file thats loaded in
             if self.xDirection == Dir.RIGHT:
                 game.add_projectiles(Projectile(
                     pygame.Rect(self.rect.right, self.rect.top,
-                    cfg.width, self.rect.height),
+                                cfg.width, self.rect.height),
                     xSpeed=self.xSpeed + cfg.speed, lifeSpan=cfg.lifeSpan
                 ))
             elif self.xDirection == Dir.LEFT:
                 game.add_projectiles(Projectile(
                     pygame.Rect(self.rect.left - cfg.width, self.rect.top,
-                    cfg.width, self.rect.height),
+                                cfg.width, self.rect.height),
                     xSpeed=self.xSpeed - cfg.speed, lifeSpan=cfg.lifeSpan
                 ))
 
@@ -486,11 +485,17 @@ class Projectile(Entity):
         self.rect.x += self.xSpeed
         self.rect.y += self.ySpeed
 
+        # Custom logic
+        self.act(game)
+
         # Die at end of lifespan
         if self.age == 0:
             # Remove from spritegroups
             self.kill()
 
+    def act(self, game: "Game"): # pylint: disable=unused-argument
+        """Contains the thematic actions of the projectile, eg damage"""
+        return None
 
 
 # Main game class (very unrefined)
@@ -556,7 +561,7 @@ class Game:
         self.create_player(players[0])
         self.create_player(players[1])
 
-        # TODO statics should at least be moved and created with hooks maybe
+        # TODO statics should at least be moved and created with hooks
         # Create Barriers
         blocks = (
 
