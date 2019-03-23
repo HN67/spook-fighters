@@ -423,17 +423,22 @@ class Player(Entity):
 
         # Action event
         if self.Events.ACTION in events:
+            # Reference config
+            cfg = Config.projectile.grab()
             # Create projectile on the passed game
             # TODO Static 5 for displacement and size and speed/life, should be config?
+            # TODO should this behavior be defined here, or another file thats loaded in
             if self.xDirection == Dir.RIGHT:
                 game.add_projectiles(Projectile(
-                    pygame.Rect(self.rect.right, self.rect.top, 10, 50),
-                    xSpeed=self.xSpeed + 5, ySpeed=0, lifeSpan=4
+                    pygame.Rect(self.rect.right, self.rect.top,
+                    cfg.width, self.rect.height),
+                    xSpeed=self.xSpeed + cfg.speed, lifeSpan=cfg.lifeSpan
                 ))
             elif self.xDirection == Dir.LEFT:
                 game.add_projectiles(Projectile(
-                    pygame.Rect(self.rect.left - 10, self.rect.top, 10, 50),
-                    xSpeed=self.xSpeed - 5, ySpeed=0, lifeSpan=4
+                    pygame.Rect(self.rect.left - cfg.width, self.rect.top,
+                    cfg.width, self.rect.height),
+                    xSpeed=self.xSpeed - cfg.speed, lifeSpan=cfg.lifeSpan
                 ))
 
 

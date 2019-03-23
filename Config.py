@@ -33,22 +33,22 @@ class player:
     # Keyset for Player 1
     keys1 = Core.Keyset(
 
-        UP=119,
-        DOWN=115,
-        LEFT=97,
-        RIGHT=100,
-        ACTION=113,
+        UP=119, # W
+        DOWN=115, # S
+        LEFT=97, # A
+        RIGHT=100, # D
+        ACTION=113, # Q
 
     )
 
     # Keyset for Player 2
     keys2 = Core.Keyset(
 
-        UP=273,
-        DOWN=274,
-        RIGHT=275,
-        LEFT=276,
-        ACTION=47,
+        UP=273, # ^ Arrow
+        DOWN=274, # Down Arrow
+        RIGHT=275, # > Arrow
+        LEFT=276, # < Arrow
+        ACTION=47, # / key
 
     )
 
@@ -61,3 +61,14 @@ class player:
     airJumps = 2
     slide = 1
     wallJumpFreeze = 5
+
+class projectile:
+    """Config for the different projectiles"""
+
+    class grab:
+
+        displacement = 0 # Starting distance from player
+        width = 10
+
+        speed = 5 # Relative horizontal speed
+        lifeSpan = 4
