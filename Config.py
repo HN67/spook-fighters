@@ -62,8 +62,8 @@ class player:
     slide = 1
     wallJumpFreeze = 5
 
-class projectile:
-    """Config for the different projectiles"""
+class attack:
+    """Config for the different attacks"""
 
     class grab:
         """Config for grab attack"""

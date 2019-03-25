@@ -3,7 +3,7 @@
 # Authors: Ryan/Kevin
 # GitHub: https://github.com/HN67/spook-fighters
 
-# At some point this should probably be broken into modules?
+# TODO At some point this should probably be broken into modules?
 # Though the stuff is pretty interconnected
 
 # Import modules
@@ -18,6 +18,8 @@ import Config
 from Core import Dir, Color, Pair
 
 from Base import Entity
+
+import Mechanics
 
 # Module level constants
 # Determines if debug info is shown
@@ -71,8 +73,8 @@ class Player(Entity):
         # Dynamic current xSpeed for acceleration if needed
         self.xSpeed = 0
 
-        # Freeze prevents movement for an amount of ticks
-        self.xFreeze = 0
+        # Stun ticks (freezes movement) remaining
+        self.stun = 0
 
         # Setup which direction you are facing
         self.xDirection = None
@@ -124,8 +126,17 @@ class Player(Entity):
         barriers = game.get_solids()
         events = self.parse_events(game.get_events(), game.keys_held())
 
+        # Gravity pull
+        self.ySpeed += self.gravity
+
+        # Wall hang logic
+        if self.touching(barriers, Dir.LEFT) or self.touching(barriers, Dir.RIGHT):
+            # Slow falling
+            self.ySpeed = self.slide
+
         # Set x speed if not frozen
-        if self.xFreeze == 0:
+        if self.stun == 0:
+
             # A left D right
             if self.Events.LEFT in events:
                 # Set speed
@@ -139,51 +150,44 @@ class Player(Entity):
                 self.xDirection = Dir.RIGHT
             else:
                 self.xSpeed = 0
+
+            # Add fast fall pull
+            if self.Events.DOWN in events:
+                self.ySpeed += self.fall
+
+            # Jump code
+            if (self.Events.UP in events) and (self.jumps > 0):
+
+                # Decrement jump counter if in air
+                if not (self.touching(barriers, Dir.DOWN) or
+                        self.touching(barriers, Dir.LEFT) or
+                        self.touching(barriers, Dir.RIGHT)):
+                    self.jumps -= 1
+                # Set y-velocity
+                self.ySpeed = -self.jump
+
+                # Wall jump
+                # Left wall jump
+                if self.touching(barriers, Dir.LEFT):
+
+                    # Move right
+                    self.xSpeed = self.speed
+
+                    # Freeze movement temporarily
+                    self.stun = self.wallJumpFreezeTicks
+
+                # Right wall jump
+                elif self.touching(barriers, Dir.RIGHT):
+
+                    # Move left
+                    self.xSpeed = -self.speed
+
+                    # Freeze movement temporarily
+                    self.stun = self.wallJumpFreezeTicks
+
         else:
             # Decrease freeze if frozen
-            self.xFreeze -= 1
-
-        # Add gravity pull
-        self.ySpeed += self.gravity
-
-        # wall hang logic
-        if self.touching(barriers, Dir.LEFT) or self.touching(barriers, Dir.RIGHT):
-            # Slow falling
-            self.ySpeed = self.slide
-
-        # Add fast fall pull
-        if self.Events.DOWN in events:
-            self.ySpeed += self.fall
-
-        # Jump code
-        if (self.Events.UP in events) and (self.jumps > 0):
-
-            # Decrement jump counter if in air
-            if not (self.touching(barriers, Dir.DOWN) or
-                    self.touching(barriers, Dir.LEFT) or
-                    self.touching(barriers, Dir.RIGHT)):
-                self.jumps -= 1
-            # Set y-velocity
-            self.ySpeed = -self.jump
-
-            # Wall jump
-            # Left wall
-            if self.touching(barriers, Dir.LEFT):
-
-                # Move right
-                self.xSpeed = self.speed
-
-                # Freeze movement temporarily
-                self.xFreeze = self.wallJumpFreezeTicks
-
-            # Right wall
-            elif self.touching(barriers, Dir.RIGHT):
-
-                # Move left
-                self.xSpeed = -self.speed
-
-                # Freeze movement temporarily
-                self.xFreeze = self.wallJumpFreezeTicks
+            self.stun -= 1
 
         # TODO probably break function here and move rest into another (move or something
         # TODO maybe dont do that but this update() should be broken into logical components
@@ -196,7 +200,7 @@ class Player(Entity):
         if self.collided.y:
 
             # Reset jumps on floor collision
-            if self.ySpeed > 0:
+            if self.touching(barriers, Dir.DOWN):
                 self.jumps = self.airJumps
 
             # Zero vertical speed due to vertical collision
@@ -217,22 +221,8 @@ class Player(Entity):
 
         # Action event
         if self.Events.ACTION in events:
-            # Reference config
-            cfg = Config.projectile.grab()
-            # Create projectile on the passed game
-            # TODO should this behavior be defined here, or another file thats loaded in
-            if self.xDirection == Dir.RIGHT:
-                game.add_projectiles(Projectile(
-                    pygame.Rect(self.rect.right, self.rect.top,
-                                cfg.width, self.rect.height),
-                    xSpeed=self.xSpeed + cfg.speed, lifeSpan=cfg.lifeSpan
-                ))
-            elif self.xDirection == Dir.LEFT:
-                game.add_projectiles(Projectile(
-                    pygame.Rect(self.rect.left - cfg.width, self.rect.top,
-                                cfg.width, self.rect.height),
-                    xSpeed=self.xSpeed - cfg.speed, lifeSpan=cfg.lifeSpan
-                ))
+            # Create Grab Attack
+            game.add_controllers(Mechanics.Grab(self))
 
 
 # Basic barrier class
@@ -311,6 +301,10 @@ class Game:
         self.solids = pygame.sprite.Group()
 
         self.projectiles = pygame.sprite.Group()
+
+        self.controllers = pygame.sprite.Group()
+
+        self.visibles = pygame.sprite.Group()
 
         # Events and keysHeld variables
         self.events = None
@@ -406,7 +400,7 @@ class Game:
 
         # Draw all sprites onto sky color
         self.surface.fill(Color.SKYBLUE)
-        self.allSprites.draw(self.surface)
+        self.visibles.draw(self.surface)
 
         # Blit onto the screen
         self.screen.blit(self.surface, (0, 0))
@@ -427,17 +421,25 @@ class Game:
         self.barriers.add(*barriers)
         self.allSprites.add(*barriers)
         self.solids.add(*barriers)
+        self.visibles.add(*barriers)
 
     def create_player(self, player):
         """Add a player to the game"""
         self.players.add(player)
         self.allSprites.add(player)
         self.solids.add(player)
+        self.visibles.add(player)
 
     def add_projectiles(self, *projectiles):
         """Adds projectiles to the game state"""
         self.projectiles.add(*projectiles)
         self.allSprites.add(*projectiles)
+        self.visibles.add(*projectiles)
+
+    def add_controllers(self, *controllers):
+        """Adds controllers to the game state"""
+        self.allSprites.add(*controllers)
+        self.controllers.add(*controllers)
 
     def get_solids(self):
         """Returns the solid objects (for collisions) of the game"""
