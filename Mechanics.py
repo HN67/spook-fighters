@@ -28,6 +28,7 @@ class Attack(Base.Controller):
         self.tick = 0
 
         # Freeze caster
+        player.xSpeed = 0
         player.stun = stun
 
     def update(self, game: "Game"):
@@ -67,12 +68,3 @@ class Grab(Attack):
 
         elif self.tick == 10:
             self.kill()
-
-"""
-elif self.xDirection == Dir.LEFT:
-                game.add_projectiles(Projectile(
-                    pygame.Rect(self.rect.left - cfg.width, self.rect.top,
-                                cfg.width, self.rect.height),
-                    xSpeed=self.xSpeed - cfg.speed, lifeSpan=cfg.lifeSpan
-                ))
-"""
