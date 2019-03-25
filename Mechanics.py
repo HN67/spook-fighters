@@ -42,29 +42,48 @@ class Grab(Attack):
     def __init__(self, player: "Player"):
         super().__init__(player, stun=10)
 
+        # Reference config
+        cfg = Config.attack.grab()
+
+        # Starting x position and speed (left/right)
+        if self.xDirection == Core.Dir.LEFT:
+            xPosition = self.rect.left - cfg.width
+            speed = -cfg.speed
+        else:
+            xPosition = self.rect.right
+            speed = cfg.speed
+
+        # Create projectile(not added to the game yet)
+        self.projectile = main.Projectile(
+            pygame.Rect(xPosition, self.rect.top,
+                        cfg.width, self.rect.height),
+            xSpeed=speed, lifeSpan=cfg.lifeSpan
+        )
+
     def update(self, game: "Game"):
         super().update(game)
 
         # Create projectile
         if self.tick == 3:
+            game.add_projectiles(self.projectile)
 
-            # Reference config
-            cfg = Config.attack.grab()
-
-            # Starting x position and speed (left/right)
-            if self.xDirection == Core.Dir.LEFT:
-                xPosition = self.rect.left - cfg.width
-                speed = -cfg.speed
-            else:
-                xPosition = self.rect.right
-                speed = cfg.speed
-
-            # Create projectile
-            game.add_projectiles(main.Projectile(
-                pygame.Rect(xPosition, self.rect.top,
-                            cfg.width, self.rect.height),
-                xSpeed=speed, lifeSpan=cfg.lifeSpan
-            ))
-
+        # Garbage the controller
         elif self.tick == 10:
             self.kill()
+
+        # Watch projectile
+        if self.projectile.collided:
+            # Iterate through player collisions
+            for player in self.projectile.hits:
+                if player is not self.player:
+                    # Damage the other player
+                    # TODO config all of these
+                    player.stun = 20 #TODO config this
+                    player.ySpeed = -15 # TODO config this too
+                    if self.xDirection == Core.Dir.LEFT:
+                        player.xSpeed = -5
+                    elif self.xDirection == Core.Dir.RIGHT:
+                        player.xSpeed = 5
+                    # Delete the projectile
+                    self.projectile.collided = False
+                    self.projectile.kill()

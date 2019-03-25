@@ -123,7 +123,8 @@ class Player(Entity):
            And with events from Player.Events passed in"""
 
         # Reference collected data
-        barriers = game.get_solids()
+        barriers = game.get_barriers()
+        solids = game.get_solids()
         events = self.parse_events(game.get_events(), game.keys_held())
 
         # Gravity pull
@@ -158,17 +159,17 @@ class Player(Entity):
             # Jump code
             if (self.Events.UP in events) and (self.jumps > 0):
 
-                # Decrement jump counter if in air
-                if not (self.touching(barriers, Dir.DOWN) or
-                        self.touching(barriers, Dir.LEFT) or
-                        self.touching(barriers, Dir.RIGHT)):
+                # Decrement jump counter if in air # CAN JUMP OFF ANY SOLID
+                if not (self.touching(solids, Dir.DOWN) or
+                        self.touching(solids, Dir.LEFT) or
+                        self.touching(solids, Dir.RIGHT)):
                     self.jumps -= 1
                 # Set y-velocity
                 self.ySpeed = -self.jump
 
                 # Wall jump
                 # Left wall jump
-                if self.touching(barriers, Dir.LEFT):
+                if self.touching(solids, Dir.LEFT):
 
                     # Move right
                     self.xSpeed = self.speed
@@ -177,7 +178,7 @@ class Player(Entity):
                     self.stun = self.wallJumpFreezeTicks
 
                 # Right wall jump
-                elif self.touching(barriers, Dir.RIGHT):
+                elif self.touching(solids, Dir.RIGHT):
 
                     # Move left
                     self.xSpeed = -self.speed
@@ -193,14 +194,14 @@ class Player(Entity):
         # TODO maybe dont do that but this update() should be broken into logical components
 
         # Move with collisions enabled
-        self.collided = self.move(self.xSpeed, self.ySpeed, barriers)
+        self.collided = self.move(self.xSpeed, self.ySpeed, solids)
 
         # React to collisions
         # Vertical floor/ceiling collision
         if self.collided.y:
 
             # Reset jumps on floor collision
-            if self.touching(barriers, Dir.DOWN):
+            if self.touching(solids, Dir.DOWN):
                 self.jumps = self.airJumps
 
             # Zero vertical speed due to vertical collision
@@ -214,8 +215,6 @@ class Player(Entity):
 
             # Zero horizontal speed due to wall collision
             self.xSpeed = 0
-            # Cling to wall
-            self.ySpeed = 0
 
         # Projectile code
 
@@ -261,23 +260,32 @@ class Projectile(Entity):
 
         self.age = lifeSpan
 
-    def update(self, game: "Game"):
-        # Decrement age
-        self.age -= 1
+        # Shows if there was a collision last tick
+        self.collided = False
 
-        # Change position
-        self.rect.x += self.xSpeed
-        self.rect.y += self.ySpeed
+        # Which players the projectile collided with
+        self.hits = None
+
+    def update(self, game: "Game"):
 
         # Die at end of lifespan
         if self.age == 0:
             # Remove from spritegroups
             self.kill()
+        else:
+            # Decrement age
+            self.age -= 1
 
-    def act(self, game: "Game"): # pylint: disable=unused-argument
-        """Contains the thematic actions of the projectile, eg damage"""
-        return None
+            # Change position
+            self.rect.x += self.xSpeed
+            self.rect.y += self.ySpeed
 
+            # Check for player collisions and update signal
+            self.hits = self.collisions(game.get_players())
+            if len(self.hits) > 0:
+                self.collided = True
+            else:
+                self.collided = False
 
 # Main game class (very unrefined)
 class Game:
@@ -396,7 +404,12 @@ class Game:
         self.keysHeld = pygame.key.get_pressed()
 
         # Update all sprites
-        self.allSprites.update(self)
+        #self.allSprites.update(self)
+        # In specific order
+        self.barriers.update(self)
+        self.players.update(self)
+        self.projectiles.update(self)
+        self.controllers.update(self)
 
         # Draw all sprites onto sky color
         self.surface.fill(Color.SKYBLUE)
@@ -444,6 +457,14 @@ class Game:
     def get_solids(self):
         """Returns the solid objects (for collisions) of the game"""
         return self.solids
+
+    def get_players(self):
+        """Returns the players of the game"""
+        return self.players
+
+    def get_barriers(self):
+        """Returns the barriers of the game"""
+        return self.barriers
 
 ## Define some top-scope functions
 # Function to produce a corner-rect
