@@ -63,8 +63,9 @@ class Grab(Attack):
         if self.tick == 1:
             game.add_projectiles(self.projectile)
 
-        # Garbage the controller
-        elif self.tick == 10: # TODO config this
+        # Garbage the controller, lasts a little longer than the projectile
+        # Could be optimized if need be, but right now its a logic safety buffer
+        elif self.tick == Config.attack.grab.lifeSpan + 2:
             self.kill()
 
         # Watch projectile
@@ -73,13 +74,12 @@ class Grab(Attack):
             for player in self.projectile.hits:
                 if player is not self.player:
                     # Damage the other player
-                    # TODO config all of these
-                    player.stun = 20 #TODO config this
-                    player.ySpeed = -15 # TODO config this too
+                    player.stun = Config.attack.grab.hitStun
+                    player.ySpeed = Config.attack.grab.yKnockback
                     if self.xDirection == Core.Dir.LEFT:
-                        player.xSpeed = -5 #TODO should this be based on player speed
+                        player.xSpeed = -Config.attack.grab.xKnockback
                     elif self.xDirection == Core.Dir.RIGHT:
-                        player.xSpeed = 5
+                        player.xSpeed = Config.attack.grab.xKnockback
                     # Delete the projectile
                     self.projectile.collided = False
                     self.projectile.kill()

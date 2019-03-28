@@ -73,3 +73,9 @@ class attack:
 
         speed = 5 # Relative horizontal speed
         lifeSpan = 4
+
+        hitStun = 20 # Ticks that the opponent is stun for on hit
+
+        # Knockback of opponent on hit
+        xKnockback = 5
+        yKnockback = -15
