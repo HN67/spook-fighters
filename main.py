@@ -15,6 +15,7 @@ import pygame
 
 # Import local files
 import Config
+import Core
 from Core import Dir, Color, Pair
 
 from Base import Entity
@@ -40,14 +41,15 @@ class Player(Entity):
 
     def __init__(self, rect,
                  speed, jump, fall, gravity,
-                 airJumps, wallJumpFreeze, slide, *, color=None, keyset
+                 airJumps, wallJumpFreeze, slide, *, color=Core.Color.BLACK, keyset, image=None
                 ):
 
-        super().__init__(rect)
+        super().__init__(rect, image)
+        self.hasImage = (image is not None)
 
         # Set color
-        if color is not None:
-            self.image.fill(color)
+        self.color = color
+        self.image.fill(self.color)
 
         # Reference parameters
         # Movement speed (horizontal)
@@ -130,13 +132,13 @@ class Player(Entity):
         # Gravity pull
         self.ySpeed += self.gravity
 
-        # Wall hang logic
-        if self.touching(barriers, Dir.LEFT) or self.touching(barriers, Dir.RIGHT):
-            # Slow falling
-            self.ySpeed = self.slide
-
-        # Set x speed if not frozen
+        # Check to make sure not stunned for most movement options
         if self.stun == 0:
+
+            # Wall hang logic, only wall hang if not stunned
+            if self.touching(barriers, Dir.LEFT) or self.touching(barriers, Dir.RIGHT):
+                # Slow falling
+                self.ySpeed = self.slide
 
             # A left D right
             if self.Events.LEFT in events:
@@ -189,6 +191,11 @@ class Player(Entity):
         else:
             # Decrease freeze if frozen
             self.stun -= 1
+            if not self.hasImage:
+                if self.stun == 0:
+                    self.image.fill(self.color)
+                else:
+                    self.image.fill(Core.Color.GRAY)
 
         # TODO probably break function here and move rest into another (move or something
         # TODO maybe dont do that but this update() should be broken into logical components
@@ -217,6 +224,8 @@ class Player(Entity):
             self.xSpeed = 0
 
         # Projectile code
+        # TODO should only be able to attack if not stunned, actually there should be
+        # a cooldown stun independent of movement stun
 
         # Action event
         if self.Events.ACTION in events:
@@ -407,10 +416,10 @@ class Game:
         #self.allSprites.update(self)
         # In specific order
         self.barriers.update(self)
-        self.players.update(self)
         self.projectiles.update(self)
+        self.players.update(self)
         self.controllers.update(self)
-
+        
         # Draw all sprites onto sky color
         self.surface.fill(Color.SKYBLUE)
         self.visibles.draw(self.surface)

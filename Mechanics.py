@@ -15,8 +15,8 @@ import main
 class Attack(Base.Controller):
     """Base class for attack controllers"""
 
-    def __init__(self, player: "Player", stun: int = 0):
-        super().__init__(player.rect.copy()) #?
+    def __init__(self, player: "Player"):
+        super().__init__(player.rect.copy())
 
         # Reference player
         self.player = player
@@ -27,10 +27,6 @@ class Attack(Base.Controller):
         # Init age for tick count
         self.tick = 0
 
-        # Freeze caster
-        player.xSpeed = 0
-        player.stun = stun
-
     def update(self, game: "Game"):
         """Updates the entity"""
         self.tick += 1
@@ -40,7 +36,7 @@ class Grab(Attack):
     """Grab attack object"""
 
     def __init__(self, player: "Player"):
-        super().__init__(player, stun=10)
+        super().__init__(player)
 
         # Reference config
         cfg = Config.attack.grab()
@@ -53,22 +49,22 @@ class Grab(Attack):
             xPosition = self.rect.right
             speed = cfg.speed
 
-        # Create projectile(not added to the game yet)
+        # Create projectile
         self.projectile = main.Projectile(
             pygame.Rect(xPosition, self.rect.top,
                         cfg.width, self.rect.height),
-            xSpeed=speed, lifeSpan=cfg.lifeSpan
+            xSpeed=speed + self.player.xSpeed, lifeSpan=cfg.lifeSpan
         )
 
     def update(self, game: "Game"):
         super().update(game)
 
-        # Create projectile
-        if self.tick == 3:
+        # Add projectile on first tick
+        if self.tick == 1:
             game.add_projectiles(self.projectile)
 
         # Garbage the controller
-        elif self.tick == 10:
+        elif self.tick == 10: # TODO config this
             self.kill()
 
         # Watch projectile
@@ -81,7 +77,7 @@ class Grab(Attack):
                     player.stun = 20 #TODO config this
                     player.ySpeed = -15 # TODO config this too
                     if self.xDirection == Core.Dir.LEFT:
-                        player.xSpeed = -5
+                        player.xSpeed = -5 #TODO should this be based on player speed
                     elif self.xDirection == Core.Dir.RIGHT:
                         player.xSpeed = 5
                     # Delete the projectile
