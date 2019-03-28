@@ -419,7 +419,7 @@ class Game:
         self.projectiles.update(self)
         self.players.update(self)
         self.controllers.update(self)
-        
+
         # Draw all sprites onto sky color
         self.surface.fill(Color.SKYBLUE)
         self.visibles.draw(self.surface)
