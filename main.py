@@ -41,7 +41,8 @@ class Player(Entity):
 
     def __init__(self, rect,
                  speed, jump, fall, gravity,
-                 airJumps, wallJumpFreeze, slide, *, color=Core.Color.BLACK, keyset, image=None
+                 airJumps, wallJumpFreeze, slide, toughness,
+                 *, color=Core.Color.BLACK, keyset, image=None
                 ):
 
         super().__init__(rect, image)
@@ -94,6 +95,29 @@ class Player(Entity):
 
         # Reference keyset
         self.keyset = keyset
+
+        # Init damage counter
+        self.damage = 0
+
+        # Damage resistance
+        self.toughness = toughness
+
+    def hit(self, damage: int, force: int, varForce: float, vector: Core.Vector):
+        """Handles the player getting hit
+        damage - damage counter increase
+        force - modifier for knockback and stun
+        varforce - additional force that scales with total damage
+        vector - direction of attack and knockback
+        """
+        # Increase damage
+        self.damage += damage
+        # Calculate total force
+        totalForce = force + int(self.damage * varForce)
+        # Take stun
+        self.stun = totalForce
+        # Take knockback based on vector and stun (calced above)
+        self.xSpeed = vector.x * totalForce
+        self.ySpeed = vector.y * totalForce
 
     def parse_events(self, events, keysHeld):
         """Parses PyGame events and held keys into Player events using its keyset"""
@@ -342,6 +366,7 @@ class Game:
                 airJumps=Config.player.airJumps,
                 wallJumpFreeze=Config.player.wallJumpFreeze,
                 slide=Config.player.slide,
+                toughness=Config.player.damageScaling,
                 color=Color.ORANGE,
                 keyset=Config.player.keys1,
             ),
@@ -356,6 +381,7 @@ class Game:
                 airJumps=Config.player.airJumps,
                 wallJumpFreeze=Config.player.wallJumpFreeze,
                 slide=Config.player.slide,
+                toughness=Config.player.damageScaling,
                 color=Color.BLUE,
                 keyset=Config.player.keys2,
             )

@@ -74,12 +74,21 @@ class Grab(Attack):
             for player in self.projectile.hits:
                 if player is not self.player:
                     # Damage the other player
-                    player.stun = Config.attack.grab.hitStun
-                    player.ySpeed = Config.attack.grab.yKnockback
+
+                    # Calculate direction
                     if self.xDirection == Core.Dir.LEFT:
-                        player.xSpeed = -Config.attack.grab.xKnockback
+                        xKnockback = -Config.attack.grab.xKnockback
                     elif self.xDirection == Core.Dir.RIGHT:
-                        player.xSpeed = Config.attack.grab.xKnockback
+                        xKnockback = Config.attack.grab.xKnockback
+
+                    # Hit player
+                    player.hit(
+                        damage=Config.attack.grab.damage,
+                        force=Config.attack.grab.force,
+                        varForce=Config.attack.grab.varForce,
+                        vector=Core.Vector(xKnockback, Config.attack.grab.yKnockback)
+                    )
+
                     # Delete the projectile
                     self.projectile.collided = False
                     self.projectile.kill()

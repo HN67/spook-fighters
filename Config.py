@@ -62,6 +62,8 @@ class player:
     slide = 1
     wallJumpFreeze = 5
 
+    damageScaling = 20
+
 class attack:
     """Config for the different attacks"""
 
@@ -74,8 +76,11 @@ class attack:
         speed = 5 # Relative horizontal speed
         lifeSpan = 4
 
-        hitStun = 20 # Ticks that the opponent is stun for on hit
+        damage = 5
 
-        # Knockback of opponent on hit
-        xKnockback = 5
-        yKnockback = -15
+        force = 20 # Ticks that the opponent is stun for on hit
+        varForce = 0.1 # Extra force per damage taken
+
+        # Knockback of opponent on hit scaled on force
+        xKnockback = 0.25
+        yKnockback = -0.75
