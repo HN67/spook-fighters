@@ -17,6 +17,18 @@ class game:
     # Frames (ticks) per second max of the game
     fps = 60
 
+class hud:
+    """Configuration for the HUD"""
+
+    # Height of the damage variables
+    damageHeight = 40
+
+    margin = 10
+    yPosition = game.height - margin - damageHeight
+
+    x1Position = 10
+    x2Position = game.width - damageHeight * 2 - margin
+
 class stage:
     """Config for stage setup"""
 

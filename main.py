@@ -422,17 +422,17 @@ class Game:
         labels = (
 
             Base.Label(
-                pygame.Rect(10, 10, 0, 0),
-                height=40,
+                pygame.Rect(Config.hud.x1Position, Config.hud.yPosition, 0, 0),
+                height=Config.hud.damageHeight,
                 variable=players[0].damage,
-                color=Color.BLACK, bgColor=Color.WHITE
+                color=Color.BLACK, bgColor=Color.ORANGE
             ),
 
             Base.Label(
-                pygame.Rect(750, 10, 0, 0),
-                height=40,
+                pygame.Rect(Config.hud.x2Position, Config.hud.yPosition, 0, 0),
+                height=Config.hud.damageHeight,
                 variable=players[1].damage,
-                color=Color.BLACK, bgColor=Color.WHITE
+                color=Color.BLACK, bgColor=Color.BLUE
             ),
 
         )

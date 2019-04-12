@@ -223,7 +223,7 @@ class Label(pygame.sprite.Sprite):
 
         # Setup text stuff
         # Create font
-        self.font = pygame.font.SysFont(None, height)
+        self.font = pygame.font.SysFont("Courier New", height)
         # Render
         self._render()
 
