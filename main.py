@@ -452,7 +452,7 @@ class Game:
         """Add a player to the game"""
         self.players.add(player)
         self.allSprites.add(player)
-        self.solids.add(player)
+        #self.solids.add(player)
         self.visibles.add(player)
 
     def add_projectiles(self, *projectiles):
