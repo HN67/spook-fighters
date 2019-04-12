@@ -57,6 +57,9 @@ class Player(Entity):
         # Stun ticks (freezes movement) remaining
         self.stun = 0
 
+        # Cooldown ticks (freezes attacks)
+        self.cooldown = 0
+
         # Setup which direction you are facing
         self.xDirection = None
 
@@ -133,10 +136,10 @@ class Player(Entity):
 
         # Check to make sure not stunned for most movement options
         if self.stun == 0:
-            
+
             # Update color
             if not self.hasImage:
-                    self.image.fill(self.color)
+                self.image.fill(self.color)
 
             # Wall hang logic, only wall hang if not stunned
             if self.touching(barriers, Dir.LEFT) or self.touching(barriers, Dir.RIGHT):
@@ -203,7 +206,7 @@ class Player(Entity):
             # Align stun at 0
             if self.stun <= 0:
                 self.stun = 0
-                
+
         # TODO probably break function here and move rest into another (move or something
         # TODO maybe dont do that but this update() should be broken into logical components
 
@@ -234,14 +237,25 @@ class Player(Entity):
             # Reset stun to prevent wall locking
             self.stun = 0
 
-        # Projectile code
-        # TODO should only be able to attack if not stunned, actually there should be
-        # a cooldown stun independent of movement stun
+        # Attack code
+        # Only attack if not cooling down
+        if self.cooldown == 0:
 
-        # Action event
-        if self.Events.ACTION in events:
-            # Create Grab Attack
-            game.add_controllers(Mechanics.Grab(self))
+            # Also cant be movement stunned
+            if self.stun == 0:
+                # Action event
+                if self.Events.ACTION in events:
+                    # Create Grab Attack
+                    game.add_controllers(Mechanics.Grab(self))
+
+        else:
+
+            # Detick cooldown
+            self.cooldown -= 1
+
+            # Align cooldown at 0
+            if self.cooldown <= 0:
+                self.cooldown = 0
 
 
 # Basic barrier class

@@ -56,6 +56,9 @@ class Grab(Attack):
             xSpeed=speed + self.player.xSpeed, lifeSpan=cfg.lifeSpan
         )
 
+        # Add cooldown to player
+        self.player.cooldown = cfg.cooldown
+
     def update(self, game: "Game"):
         super().update(game)
 

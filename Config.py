@@ -79,6 +79,8 @@ class attack:
         speed = 5 # Relative horizontal speed
         lifeSpan = 4
 
+        cooldown = 20 # Ticks to cooldown for
+
         damage = 5
 
         force = 20 # Ticks that the opponent is stun for on hit
@@ -86,4 +88,4 @@ class attack:
 
         # Knockback of opponent on hit scaled on force
         xKnockback = 0.25
-        yKnockback = -0.75
+        yKnockback = -0.25#-0.75
