@@ -53,16 +53,18 @@ class player:
     )
 
     # Attributes
-    speed = 7
-    jump = 17
-    fastfall = 2
-    gravity = 1 # Should this be a global constant
+    attributes = Core.PlayerAttributes(
+        speed=7,
+        jump=17,
+        fastfall=2,
+        gravity=1,
 
-    airJumps = 2
-    slide = 1
-    wallJumpFreeze = 5
+        airJumps=2,
+        slide=1,
+        wallJumpFreeze=5,
 
-    damageScaling = 20
+        speedStun=25,
+    )
 
 class attack:
     """Config for the different attacks"""

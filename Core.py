@@ -42,6 +42,31 @@ class Color:
 
     SKYBLUE = (0, 200, 200)
 
+class AttributeSet:
+    """Object that holds information on a variety of attributes\n
+    Each keyword argument passed is set as an attribute"""
+
+    def __init__(self, **attrs):
+        # Create an attribute for each passed in
+        for attribute in attrs:
+            setattr(self, attribute, attrs[attribute])
+
+@dataclass
+class PlayerAttributes:
+    """Stores various data about the behavior of the player"""
+
+    speed: int
+    jump: int
+    fastfall: int
+    gravity: int
+
+    airJumps: int
+    slide: int
+    wallJumpFreeze: int
+
+    # Collisions at a speed greater than this will stun
+    speedStun: int
+
 @dataclass
 class Keyset:
     """Keyset representing the character mappings for a player object"""

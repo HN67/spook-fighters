@@ -3,9 +3,6 @@
 # Authors: Ryan/Kevin
 # GitHub: https://github.com/HN67/spook-fighters
 
-# TODO At some point this should probably be broken into modules?
-# Though the stuff is pretty interconnected
-
 # Import modules
 import enum
 from enum import Enum
@@ -39,10 +36,8 @@ class Player(Entity):
 
         ACTION = enum.auto()
 
-    def __init__(self, rect,
-                 speed, jump, fall, gravity,
-                 airJumps, wallJumpFreeze, slide, toughness,
-                 *, color=Core.Color.BLACK, keyset, image=None
+    def __init__(self, rect, *, color=Core.Color.BLACK, image=None,
+                 keyset: Core.Keyset, attributes: Core.PlayerAttributes
                 ):
 
         super().__init__(rect, image)
@@ -52,25 +47,8 @@ class Player(Entity):
         self.color = color
         self.image.fill(self.color)
 
-        # Reference parameters
-        # Movement speed (horizontal)
-        self.speed = speed
-        # Jump power
-        self.jump = jump
-        # Force of gravity
-        self.gravity = gravity
-        # Power of accelerated falling
-        self.fall = fall
-
-        # Number of max air jumps
-        # Reference airJumps
-        self.airJumps = airJumps
-        # Constant for length of wallJump freeze
-        # Reference wallFreeze
-        self.wallJumpFreezeTicks = wallJumpFreeze
-
-        # Reference wallslide
-        self.slide = slide
+        # Reference attributes
+        self.attributes = attributes
 
         # Construct dynamic variables
         # Dynamic current xSpeed for acceleration if needed
@@ -99,15 +77,12 @@ class Player(Entity):
         # Init damage counter
         self.damage = 0
 
-        # Damage resistance
-        self.toughness = toughness
-
     def hit(self, damage: int, force: int, varForce: float, vector: Core.Vector):
-        """Handles the player getting hit
-        damage - damage counter increase
-        force - modifier for knockback and stun
-        varforce - additional force that scales with total damage
-        vector - direction of attack and knockback
+        """Handles the player getting hit\n
+        damage - damage counter increase\n
+        force - modifier for knockback and stun\n
+        varforce - additional force that scales with total damage\n
+        vector - direction of attack and knockback\n
         """
         # Increase damage
         self.damage += damage
@@ -154,7 +129,7 @@ class Player(Entity):
         events = self.parse_events(game.get_events(), game.keys_held())
 
         # Gravity pull
-        self.ySpeed += self.gravity
+        self.ySpeed += self.attributes.gravity
 
         # Check to make sure not stunned for most movement options
         if self.stun == 0:
@@ -162,17 +137,17 @@ class Player(Entity):
             # Wall hang logic, only wall hang if not stunned
             if self.touching(barriers, Dir.LEFT) or self.touching(barriers, Dir.RIGHT):
                 # Slow falling
-                self.ySpeed = self.slide
+                self.ySpeed = self.attributes.slide
 
             # A left D right
             if self.Events.LEFT in events:
                 # Set speed
-                self.xSpeed = -self.speed
+                self.xSpeed = -self.attributes.speed
                 # Remember direction
                 self.xDirection = Dir.LEFT
             elif self.Events.RIGHT in events:
                 # Set speed
-                self.xSpeed = self.speed
+                self.xSpeed = self.attributes.speed
                 # Remember direction
                 self.xDirection = Dir.RIGHT
             else:
@@ -180,7 +155,7 @@ class Player(Entity):
 
             # Add fast fall pull
             if self.Events.DOWN in events:
-                self.ySpeed += self.fall
+                self.ySpeed += self.attributes.fastfall
 
             # Jump code
             if (self.Events.UP in events) and (self.jumps > 0):
@@ -191,30 +166,35 @@ class Player(Entity):
                         self.touching(solids, Dir.RIGHT)):
                     self.jumps -= 1
                 # Set y-velocity
-                self.ySpeed = -self.jump
+                self.ySpeed = -self.attributes.jump
 
                 # Wall jump
                 # Left wall jump
                 if self.touching(solids, Dir.LEFT):
 
                     # Move right
-                    self.xSpeed = self.speed
+                    self.xSpeed = self.attributes.speed
 
                     # Freeze movement temporarily
-                    self.stun = self.wallJumpFreezeTicks
+                    self.stun = self.attributes.wallJumpFreeze
 
                 # Right wall jump
                 elif self.touching(solids, Dir.RIGHT):
 
                     # Move left
-                    self.xSpeed = -self.speed
+                    self.xSpeed = -self.attributes.speed
 
                     # Freeze movement temporarily
-                    self.stun = self.wallJumpFreezeTicks
+                    self.stun = self.attributes.wallJumpFreeze
 
         else:
+
             # Decrease freeze if frozen
             self.stun -= 1
+            if self.stun < 0:
+                self.stun = 0
+
+            # Change color
             if not self.hasImage:
                 if self.stun == 0:
                     self.image.fill(self.color)
@@ -233,7 +213,12 @@ class Player(Entity):
 
             # Reset jumps on floor collision
             if self.touching(solids, Dir.DOWN):
-                self.jumps = self.airJumps
+                self.jumps = self.attributes.airJumps
+
+            # Take stun/damage on speedy impact
+            # TODO should the speedStun be passed through constructor?
+            if self.ySpeed > self.attributes.speedStun:
+                self.hit(0, self.ySpeed - self.attributes.speedStun, 0, Core.Vector(0, 0))
 
             # Zero vertical speed due to vertical collision
             self.ySpeed = 0
@@ -242,7 +227,7 @@ class Player(Entity):
         if self.collided.x:
 
             # Reset jumps for wall jump
-            self.jumps = self.airJumps
+            self.jumps = self.attributes.airJumps
 
             # Zero horizontal speed due to wall collision
             self.xSpeed = 0
@@ -361,12 +346,7 @@ class Game:
                     Config.game.height - Config.stage.floorHeight - 2*Config.player.height,
                     Config.player.width, Config.player.height,
                 ),
-                Config.player.speed, Config.player.jump,
-                Config.player.fastfall, Config.player.gravity,
-                airJumps=Config.player.airJumps,
-                wallJumpFreeze=Config.player.wallJumpFreeze,
-                slide=Config.player.slide,
-                toughness=Config.player.damageScaling,
+                attributes=Config.player.attributes,
                 color=Color.ORANGE,
                 keyset=Config.player.keys1,
             ),
@@ -376,12 +356,7 @@ class Game:
                     Config.game.height - Config.stage.floorHeight - 2*Config.player.height,
                     Config.player.width, Config.player.height,
                 ),
-                Config.player.speed, Config.player.jump,
-                Config.player.fastfall, Config.player.gravity,
-                airJumps=Config.player.airJumps,
-                wallJumpFreeze=Config.player.wallJumpFreeze,
-                slide=Config.player.slide,
-                toughness=Config.player.damageScaling,
+                attributes=Config.player.attributes,
                 color=Color.BLUE,
                 keyset=Config.player.keys2,
             )
