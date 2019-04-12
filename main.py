@@ -79,7 +79,7 @@ class Player(Entity):
         self.keyset = keyset
 
         # Init damage counter
-        self.damage = 0
+        self.damage = Core.Variable(0)
 
     def hit(self, damage: int, force: int, varForce: float, vector: Core.Vector):
         """Handles the player getting hit\n
@@ -89,9 +89,9 @@ class Player(Entity):
         vector - direction of attack and knockback\n
         """
         # Increase damage
-        self.damage += damage
+        self.damage.value += damage
         # Calculate total force
-        totalForce = force + int(self.damage * varForce)
+        totalForce = force + int(self.damage.value * varForce)
         # Take stun
         self.stun = totalForce
         # Take knockback based on vector and stun (calced above)
@@ -424,14 +424,14 @@ class Game:
             Base.Label(
                 pygame.Rect(10, 10, 0, 0),
                 height=40,
-                text="0",
+                variable=players[0].damage,
                 color=Color.BLACK, bgColor=Color.WHITE
             ),
 
             Base.Label(
                 pygame.Rect(750, 10, 0, 0),
                 height=40,
-                text="0",
+                variable=players[1].damage,
                 color=Color.BLACK, bgColor=Color.WHITE
             ),
 
@@ -492,7 +492,7 @@ class Game:
         """Add a player to the game"""
         self.players.add(player)
         self.allSprites.add(player)
-        #self.solids.add(player)
+        self.solids.add(player)
         self.visibles.add(player)
 
     def add_projectiles(self, *projectiles):

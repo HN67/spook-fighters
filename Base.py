@@ -205,7 +205,9 @@ class Controller(pygame.sprite.Sprite):
 class Label(pygame.sprite.Sprite):
     """Class for creating text labels"""
 
-    def __init__(self, rect: pygame.Rect, height: int, text: str, color: Core.Color, bgColor: Core.Color):
+    def __init__(self, rect: pygame.Rect, variable: Core.Variable, 
+                 height: int, color: Core.Color, bgColor: Core.Color):
+        
         # Call sprite constructor
         super().__init__()
 
@@ -216,16 +218,21 @@ class Label(pygame.sprite.Sprite):
         self.color = color
         self.bgColor = bgColor
 
-        # Reference and setup text
-        self.text = text
+        # Reference variable
+        self.text = variable
 
+        # Setup text stuff
         # Create font
         self.font = pygame.font.SysFont(None, height)
-        # Draw text
-        self.image = self.font.render(self.text, True, self.color, self.bgColor)
+        # Render
+        self._render()
+
+    def _render(self):
+        """Renders the new text onto internal image"""
+        self.image = self.font.render(str(self.text.value), True, self.color, self.bgColor)
 
     def update(self, game: "Game"):
         """Updates the entity"""
 
         # Redraw the text
-        self.image = self.font.render(self.text, True, self.color, self.bgColor)
+        self._render()

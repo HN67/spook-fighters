@@ -96,3 +96,9 @@ class Vector:
     def yx_ratio(self):
         """Returns the ratio of y to x"""
         return 1/self.xy_ratio()
+
+@dataclass
+class Variable:
+    """Stores a variable, can be used to pass immutables by reference"""
+
+    value: typing.Any
