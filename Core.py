@@ -65,7 +65,8 @@ class PlayerAttributes:
     wallJumpFreeze: int
 
     # Collisions at a speed greater than this will stun
-    speedStun: int
+    ySpeedStun: int
+    xSpeedStun: int
 
 @dataclass
 class Keyset:

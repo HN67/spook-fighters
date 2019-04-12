@@ -133,6 +133,10 @@ class Player(Entity):
 
         # Check to make sure not stunned for most movement options
         if self.stun == 0:
+            
+            # Update color
+            if not self.hasImage:
+                    self.image.fill(self.color)
 
             # Wall hang logic, only wall hang if not stunned
             if self.touching(barriers, Dir.LEFT) or self.touching(barriers, Dir.RIGHT):
@@ -189,18 +193,17 @@ class Player(Entity):
 
         else:
 
-            # Decrease freeze if frozen
-            self.stun -= 1
-            if self.stun < 0:
-                self.stun = 0
-
-            # Change color
+            # Make color gray while stunnned
             if not self.hasImage:
-                if self.stun == 0:
-                    self.image.fill(self.color)
-                else:
-                    self.image.fill(Core.Color.GRAY)
+                self.image.fill(Core.Color.GRAY)
 
+            # Detick stun
+            self.stun -= 1
+
+            # Align stun at 0
+            if self.stun <= 0:
+                self.stun = 0
+                
         # TODO probably break function here and move rest into another (move or something
         # TODO maybe dont do that but this update() should be broken into logical components
 
@@ -215,13 +218,10 @@ class Player(Entity):
             if self.touching(solids, Dir.DOWN):
                 self.jumps = self.attributes.airJumps
 
-            # Take stun/damage on speedy impact
-            # TODO should the speedStun be passed through constructor?
-            if self.ySpeed > self.attributes.speedStun:
-                self.hit(0, self.ySpeed - self.attributes.speedStun, 0, Core.Vector(0, 0))
-
             # Zero vertical speed due to vertical collision
             self.ySpeed = 0
+            # Reset stun because (prevent combo locking, against floor?)
+            self.stun = 0
 
         # Horizontal wall collision
         if self.collided.x:
@@ -231,6 +231,8 @@ class Player(Entity):
 
             # Zero horizontal speed due to wall collision
             self.xSpeed = 0
+            # Reset stun to prevent wall locking
+            self.stun = 0
 
         # Projectile code
         # TODO should only be able to attack if not stunned, actually there should be

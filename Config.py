@@ -63,7 +63,8 @@ class player:
         slide=1,
         wallJumpFreeze=5,
 
-        speedStun=25,
+        ySpeedStun=15,
+        xSpeedStun=10,
     )
 
 class attack:
