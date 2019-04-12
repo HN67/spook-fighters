@@ -15,6 +15,7 @@ import Config
 import Core
 from Core import Dir, Color, Pair
 
+import Base
 from Base import Entity
 
 import Mechanics
@@ -348,6 +349,8 @@ class Game:
 
         self.visibles = pygame.sprite.Group()
 
+        self.labels = pygame.sprite.Group()
+
         # Events and keysHeld variables
         self.events = None
         self.keysHeld = None
@@ -414,6 +417,27 @@ class Game:
         )
         self.add_barriers(*blocks)
 
+        # Create labels
+        # TODO add these attributes to config, and also maybe scale of window size
+        labels = (
+
+            Base.Label(
+                pygame.Rect(10, 10, 0, 0),
+                height=40,
+                text="0",
+                color=Color.BLACK, bgColor=Color.WHITE
+            ),
+
+            Base.Label(
+                pygame.Rect(750, 10, 0, 0),
+                height=40,
+                text="0",
+                color=Color.BLACK, bgColor=Color.WHITE
+            ),
+
+        )
+        self.add_labels(*labels)
+
     def game_update(self):
         """Represents one update of entire game logic, returns False once the game is over"""
 
@@ -436,10 +460,12 @@ class Game:
         self.projectiles.update(self)
         self.players.update(self)
         self.controllers.update(self)
+        self.labels.update(self)
 
         # Draw all sprites onto sky color
         self.surface.fill(Color.SKYBLUE)
         self.visibles.draw(self.surface)
+        self.labels.draw(self.surface)
 
         # Blit onto the screen
         self.screen.blit(self.surface, (0, 0))
@@ -479,6 +505,11 @@ class Game:
         """Adds controllers to the game state"""
         self.allSprites.add(*controllers)
         self.controllers.add(*controllers)
+
+    def add_labels(self, *labels):
+        """Adds labels to the game"""
+        self.allSprites.add(*labels)
+        self.labels.add(*labels)
 
     def get_solids(self):
         """Returns the solid objects (for collisions) of the game"""

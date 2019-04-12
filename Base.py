@@ -195,3 +195,37 @@ class Controller(pygame.sprite.Sprite):
     def update(self, game: "Game"):
         """Updates the entity"""
         raise NotImplementedError(f"{type(self)} does not update")
+
+# Label class for display numbers and text
+# TODO make the Label able to be linked to a variable
+# either a game attribute, or maybe make wrapper objects so references can be passed around
+# Wrapper variables would be a pain, but maybe the `game` can hold wrappers and update them itself?
+# Or actually the entities (e.g. player) should probably expose the wrappers themselves,
+# and update them from internal primitives every update. The labels should be updated last
+class Label(pygame.sprite.Sprite):
+    """Class for creating text labels"""
+
+    def __init__(self, rect: pygame.Rect, height: int, text: str, color: Core.Color, bgColor: Core.Color):
+        # Call sprite constructor
+        super().__init__()
+
+        # Reference rect
+        self.rect = rect
+
+        # Reference colors
+        self.color = color
+        self.bgColor = bgColor
+
+        # Reference and setup text
+        self.text = text
+
+        # Create font
+        self.font = pygame.font.SysFont(None, height)
+        # Draw text
+        self.image = self.font.render(self.text, True, self.color, self.bgColor)
+
+    def update(self, game: "Game"):
+        """Updates the entity"""
+
+        # Redraw the text
+        self.image = self.font.render(self.text, True, self.color, self.bgColor)
