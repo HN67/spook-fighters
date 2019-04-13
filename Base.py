@@ -200,9 +200,9 @@ class Controller(pygame.sprite.Sprite):
 class Label(pygame.sprite.Sprite):
     """Class for creating text labels"""
 
-    def __init__(self, rect: pygame.Rect, variable: Core.Variable, 
+    def __init__(self, rect: pygame.Rect, variable: Core.Variable,
                  height: int, color: Core.Color, bgColor: Core.Color):
-        
+
         # Call sprite constructor
         super().__init__()
 
@@ -226,7 +226,9 @@ class Label(pygame.sprite.Sprite):
         """Renders the new text onto internal image"""
         self.image = self.font.render(str(self.text.value), True, self.color, self.bgColor)
 
-    def update(self, game: "Game"):
+    # The game argument needs to be there for ducktyping higher in the hierchy
+    # Also it might be used later
+    def update(self, game: "Game"): #pylint: disable=unused-argument
         """Updates the entity"""
 
         # Redraw the text

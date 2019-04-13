@@ -208,8 +208,7 @@ class Player(Entity):
             if self.stun <= 0:
                 self.stun = 0
 
-        # TODO probably break function here and move rest into another (move or something
-        # TODO maybe dont do that but this update() should be broken into logical components
+        # TODO update() method needs to be broken into logical components
 
         # Move with collisions enabled
         self.collided = self.move(self.xSpeed, self.ySpeed, solids)
@@ -339,122 +338,48 @@ class Game:
         self.surface = pygame.surface.Surface((Config.game.width, Config.game.height))
 
         # Create SpriteGroups
+
+        # All group
         self.allSprites = pygame.sprite.Group()
-
+        # Barriers, represent solid ground for players to jump off
         self.barriers = pygame.sprite.Group()
-
+        # Players, controllable
         self.players = pygame.sprite.Group()
-
+        # Solids, they are used for collisions
         self.solids = pygame.sprite.Group()
-
+        # Projectiles, moving, non colliding, non controllable (usually)
         self.projectiles = pygame.sprite.Group()
-
+        # Controllers, they manage projectiles
         self.controllers = pygame.sprite.Group()
-
+        # Visibiles, what actually gets drawn (apart from labels)
         self.visibles = pygame.sprite.Group()
-
+        # Labels: HUD/GUI labels for information output
         self.labels = pygame.sprite.Group()
 
         # Events and keysHeld variables
         self.events = None
         self.keysHeld = None
 
-        ## Basic testing
-        # Create Players
-        # TODO whole bunch of statics maybe its better now but not really for the starting position
-        players = (
-            Player(
-                pygame.Rect(
-                    Config.game.width / 2 - Config.player.width / 2,
-                    Config.game.height - Config.stage.floorHeight - 2*Config.player.height,
-                    Config.player.width, Config.player.height,
-                ),
-                attributes=Config.player.attributes,
-                color=Color.ORANGE,
-                keyset=Config.player.keys1,
-            ),
-            Player(
-                pygame.Rect(
-                    Config.game.width / 2 - Config.player.width / 2 + 100,
-                    Config.game.height - Config.stage.floorHeight - 2*Config.player.height,
-                    Config.player.width, Config.player.height,
-                ),
-                attributes=Config.player.attributes,
-                color=Color.BLUE,
-                keyset=Config.player.keys2,
-            )
-        )
-        self.create_player(players[0])
-        self.create_player(players[1])
-
-        # TODO statics should at least be moved and created with hooks
-        # Create Barriers
-        blocks = (
-
-            # Screen borders
-            # Stage bottom border
-            Barrier(cornerRect(-100, Config.game.height,
-                               Config.game.width + 100, Config.game.height + 100)),
-
-            # Stage wall borders
-            Barrier(cornerRect(-100, 0, 0, Config.game.height)), # LEFT
-            Barrier(cornerRect(Config.game.width, 0,
-                               Config.game.width + 100, Config.game.height)), # RIGHT
-
-            # Stage ceiling border
-            Barrier(cornerRect(-100, -100, Config.game.width + 100, 0)),
-
-            # Floor/ground
-            Barrier(cornerRect(0, Config.game.height - Config.stage.floorHeight,
-                               Config.game.width, Config.game.height),
-                    color=Color.DARKGREEN),
-
-            # Floating blocks
-            #Barrier(pygame.Rect(50, 50, 25, 25), color=Color.BLUE),
-            #Barrier(pygame.Rect(100, 70, 25, 25), color=Color.RED),
-            #Barrier(pygame.Rect(300, 200, 25, 50), color=Color.GREEN),
-            #Barrier(pygame.Rect(150, 200, 25, 25), color=Color.ORANGE),
-
-            Barrier(pygame.Rect(Config.game.width/2 - 200, 200,
-                                400, 100), color=Color.DARKGREEN),
-
-        )
-        self.add_barriers(*blocks)
-
-        # Create labels
-        # TODO add these attributes to config, and also maybe scale of window size
-        labels = (
-
-            Base.Label(
-                pygame.Rect(Config.hud.x1Position, Config.hud.yPosition, 0, 0),
-                height=Config.hud.damageHeight,
-                variable=players[0].damage,
-                color=Color.BLACK, bgColor=Color.ORANGE
-            ),
-
-            Base.Label(
-                pygame.Rect(Config.hud.x2Position, Config.hud.yPosition, 0, 0),
-                height=Config.hud.damageHeight,
-                variable=players[1].damage,
-                color=Color.BLACK, bgColor=Color.BLUE
-            ),
-
-        )
-        self.add_labels(*labels)
-
     def game_update(self):
         """Represents one update of entire game logic, returns False once the game is over"""
 
-        # COllect events
+        # Collect events
         self.events = pygame.event.get()
+
+        # Check each event, debug it
         for event in self.events:
-            print(event)
+
+            debug(event)
+
+            # Return False (break) if the window was quit
             if event.type == pygame.QUIT:
                 return False
+
+            # Check for key events, right now the objects mostly check keys themselves
             if event.type == pygame.KEYDOWN:
                 pass
 
-        # Check for keys held down
+        # Collect keys held down
         self.keysHeld = pygame.key.get_pressed()
 
         # Update all sprites
@@ -466,7 +391,7 @@ class Game:
         self.controllers.update(self)
         self.labels.update(self)
 
-        # Draw all sprites onto sky color
+        # Draw all sprites onto sky color, labels above everything
         self.surface.fill(Color.SKYBLUE)
         self.visibles.draw(self.surface)
         self.labels.draw(self.surface)
@@ -544,6 +469,94 @@ else:
         """Acts the exact same as pythons 'print', but can be disabled by a global"""
         return None
 
+def setup_game(screen):
+    """Sets up and returns Game instance based on 'screen'"""
+
+    # Create game object
+    game = Game(screen)
+
+    # Populate the game object
+    # Create Players
+    # TODO position is based on screen size, but should probably be moved to config
+    # Also, the color should and can easily be moved to config
+    players = (
+        Player(
+            pygame.Rect(
+                Config.game.width / 2 - Config.player.width / 2,
+                Config.game.height - Config.stage.floorHeight - 2*Config.player.height,
+                Config.player.width, Config.player.height,
+            ),
+            attributes=Config.player.attributes,
+            color=Color.ORANGE,
+            keyset=Config.player.keys1,
+        ),
+        Player(
+            pygame.Rect(
+                Config.game.width / 2 - Config.player.width / 2 + 100,
+                Config.game.height - Config.stage.floorHeight - 2*Config.player.height,
+                Config.player.width, Config.player.height,
+            ),
+            attributes=Config.player.attributes,
+            color=Color.BLUE,
+            keyset=Config.player.keys2,
+        )
+    )
+    game.create_player(players[0])
+    game.create_player(players[1])
+
+    # TODO not bad staticity, but probably room for improvement,
+    # especially with the floating platform
+    # Create Barriers
+    blocks = (
+
+        # Screen borders
+        # Stage bottom border
+        Barrier(cornerRect(-100, Config.game.height,
+                           Config.game.width + 100, Config.game.height + 100)),
+
+        # Stage wall borders
+        Barrier(cornerRect(-100, 0, 0, Config.game.height)), # LEFT
+        Barrier(cornerRect(Config.game.width, 0,
+                           Config.game.width + 100, Config.game.height)), # RIGHT
+
+        # Stage ceiling border
+        Barrier(cornerRect(-100, -100, Config.game.width + 100, 0)),
+
+        # Floor/ground
+        Barrier(cornerRect(0, Config.game.height - Config.stage.floorHeight,
+                           Config.game.width, Config.game.height),
+                color=Color.DARKGREEN),
+
+        # Floating platform
+        Barrier(pygame.Rect(Config.game.width/2 - 200, 200,
+                            400, 100), color=Color.DARKGREEN),
+
+    )
+    game.add_barriers(*blocks)
+
+    # Create labels
+    labels = (
+
+        Base.Label(
+            pygame.Rect(Config.hud.x1Position, Config.hud.yPosition, 0, 0),
+            height=Config.hud.damageHeight,
+            variable=players[0].damage,
+            color=Color.BLACK, bgColor=Color.ORANGE
+        ),
+
+        Base.Label(
+            pygame.Rect(Config.hud.x2Position, Config.hud.yPosition, 0, 0),
+            height=Config.hud.damageHeight,
+            variable=players[1].damage,
+            color=Color.BLACK, bgColor=Color.BLUE
+        ),
+
+    )
+    game.add_labels(*labels)
+
+    # Return the game object
+    return game
+
 def main():
     """Main function to start the game"""
 
@@ -553,28 +566,30 @@ def main():
     # Create clock
     clock = pygame.time.Clock()
 
-    # Create screen
     # Make screen based on config
     screen = pygame.display.set_mode((Config.game.width, Config.game.height))
 
     # Set captions
     pygame.display.set_caption(Config.game.name)
 
+    # Create game object
+    spook = setup_game(screen)
+
     # Create flag for when game is quit
     running = True
-
-    # Create game object
-    spook = Game(screen)
 
     # Run the object
     while running:
 
+        # Update the game (it draws itself onto the screen)
         running = spook.game_update()
 
+        # Flip the display
         pygame.display.flip()
 
         # Frame rate based on config
         clock.tick(Config.game.fps)
 
+# Run main() automatically if this is the __main__ file
 if __name__ == "__main__":
     main()
