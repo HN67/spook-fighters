@@ -144,8 +144,8 @@ class Player(Entity):
 
             # Wall hang logic, only wall hang if not stunned
             if self.touching(barriers, Dir.LEFT) or self.touching(barriers, Dir.RIGHT):
-                # Slow falling
-                self.ySpeed = self.attributes.slide
+                # Slow falling: Cant slow faster than slide attribute
+                self.ySpeed = min(self.attributes.slide, self.ySpeed)
 
             # A left D right
             if self.Events.LEFT in events:
@@ -178,7 +178,7 @@ class Player(Entity):
 
                 # Wall jump
                 # Left wall jump
-                if self.touching(solids, Dir.LEFT):
+                if self.touching(solids, Dir.LEFT) and not self.touching(solids, Dir.RIGHT):
 
                     # Move right
                     self.xSpeed = self.attributes.speed
@@ -187,7 +187,7 @@ class Player(Entity):
                     self.stun = self.attributes.wallJumpFreeze
 
                 # Right wall jump
-                elif self.touching(solids, Dir.RIGHT):
+                elif self.touching(solids, Dir.RIGHT) and not self.touching(solids, Dir.LEFT):
 
                     # Move left
                     self.xSpeed = -self.attributes.speed
@@ -235,6 +235,10 @@ class Player(Entity):
 
             # Zero horizontal speed due to wall collision
             self.xSpeed = 0
+
+            # Zero vertical speed due to wall collision
+            self.ySpeed = 0
+
             # Reset stun to prevent wall locking
             self.stun = 0
 
