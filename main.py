@@ -273,7 +273,6 @@ class Barrier(Entity):
         super().__init__(rect, image)
 
         if color is not None:
-            debug(color)
             self.image.fill(color)
 
     def update(self, game: "Game"):
@@ -341,17 +340,17 @@ class Game:
 
         # All group
         self.allSprites = pygame.sprite.Group()
-        # Barriers, represent solid ground for players to jump off
+        # Barriers: solid ground for players to jump off
         self.barriers = pygame.sprite.Group()
-        # Players, controllable
+        # Players: controllable characters
         self.players = pygame.sprite.Group()
-        # Solids, they are used for collisions
+        # Solids: they are used for collisions
         self.solids = pygame.sprite.Group()
-        # Projectiles, moving, non colliding, non controllable (usually)
+        # Projectile: moving, non colliding, non controllable (usually)
         self.projectiles = pygame.sprite.Group()
-        # Controllers, they manage projectiles
+        # Controllers: they manage projectiles
         self.controllers = pygame.sprite.Group()
-        # Visibiles, what actually gets drawn (apart from labels)
+        # Visibiles: what actually gets drawn (apart from labels)
         self.visibles = pygame.sprite.Group()
         # Labels: HUD/GUI labels for information output
         self.labels = pygame.sprite.Group()
