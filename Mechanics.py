@@ -8,90 +8,60 @@ import Base
 import Config
 import Core
 
-# Import main? might need to move Projectile to main
+# Import main? not great, but need it for projectile and player
 import main
 
-# Attack abstract class that handles freeze and references
-class Attack(Base.Controller):
-    """Base class for attack controllers"""
+# Constructs an Attack with custom behavior
+def Grab(player: "Player"):
+    """Returns an Attack with Grab config behavior"""
 
-    def __init__(self, player: "Player"):
-        super().__init__(player.rect.copy())
+    # Reference player (different name to prevent masking in callback)
+    caster = player
 
-        # Reference player
-        self.player = player
+    # Sets a lifespan to a little longer than the projectile
+    attack = Base.Attack(
+        caster,
+        cooldown=Config.attack.grab.cooldown,
+        lifeSpan=Config.attack.grab.lifeSpan + 2
+    )
 
-        # Reference starting direction
-        self.xDirection = player.xDirection
+    # Reference config
+    cfg = Config.attack.grab()
 
-        # Init age for tick count
-        self.tick = 0
+    # Starting x position and speed based on player facings(left/right)
+    if caster.xDirection == Core.Dir.LEFT:
+        xPosition = attack.rect.left - cfg.width
+        speed = -cfg.speed
+    else:
+        xPosition = attack.rect.right
+        speed = cfg.speed
 
-    def update(self, game: "Game"):
-        """Updates the entity"""
-        self.tick += 1
+    # Create hitstate from config, change vector x based on direction
+    hitState = Config.attack.grab.hitState.copy()
+    if player.xDirection == Core.Dir.LEFT:
+        hitState.vector.x = -hitState.vector.x
+    elif player.xDirection == Core.Dir.RIGHT:
+        hitState.vector.x *= 1
 
-# Grab attack class
-class Grab(Attack):
-    """Grab attack object"""
+    # Setup callback for first and only projectile
+    def call(projectile, player):
+        # Only interact with other players
+        if player is not caster: # Caster is from higher scope
+            # Hit the player with the hitstate (reference to here ^)
+            player.hit(**hitState.mapping()) # hitState is from higher scope
+            # Delete projectile
+            projectile.kill()
 
-    def __init__(self, player: "Player"):
-        super().__init__(player)
+    # Add projectile to be created
+    attack.add_projectile(
+        main.Projectile(
+            pygame.Rect(xPosition, attack.rect.top,
+                        cfg.width, attack.rect.height),
+            xSpeed=speed + caster.xSpeed, lifeSpan=cfg.lifeSpan,
+            callback=call,
+        ),
+        birthTick=1,
+    )
 
-        # Reference config
-        cfg = Config.attack.grab()
-
-        # Starting x position and speed (left/right)
-        if self.xDirection == Core.Dir.LEFT:
-            xPosition = self.rect.left - cfg.width
-            speed = -cfg.speed
-        else:
-            xPosition = self.rect.right
-            speed = cfg.speed
-
-        # Create projectile
-        self.projectile = main.Projectile(
-            pygame.Rect(xPosition, self.rect.top,
-                        cfg.width, self.rect.height),
-            xSpeed=speed + self.player.xSpeed, lifeSpan=cfg.lifeSpan
-        )
-
-        # Add cooldown to player
-        self.player.cooldown = cfg.cooldown
-
-    def update(self, game: "Game"):
-        super().update(game)
-
-        # Add projectile on first tick
-        if self.tick == 1:
-            game.add_projectiles(self.projectile)
-
-        # Garbage the controller, lasts a little longer than the projectile
-        # Could be optimized if need be, but right now its a logic safety buffer
-        elif self.tick == Config.attack.grab.lifeSpan + 2:
-            self.kill()
-
-        # Watch projectile
-        if self.projectile.collided:
-            # Iterate through player collisions
-            for player in self.projectile.hits:
-                if player is not self.player:
-                    # Damage the other player
-
-                    # Calculate direction
-                    if self.xDirection == Core.Dir.LEFT:
-                        xKnockback = -Config.attack.grab.xKnockback
-                    elif self.xDirection == Core.Dir.RIGHT:
-                        xKnockback = Config.attack.grab.xKnockback
-
-                    # Hit player
-                    player.hit(
-                        damage=Config.attack.grab.damage,
-                        force=Config.attack.grab.force,
-                        varForce=Config.attack.grab.varForce,
-                        vector=Core.Vector(xKnockback, Config.attack.grab.yKnockback)
-                    )
-
-                    # Delete the projectile
-                    self.projectile.collided = False
-                    self.projectile.kill()
+    # Return the attack Object
+    return attack

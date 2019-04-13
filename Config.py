@@ -85,19 +85,23 @@ class attack:
     class grab:
         """Config for grab attack"""
 
-        displacement = 0 # Starting distance from player
         width = 10
 
         speed = 5 # Relative horizontal speed
-        lifeSpan = 4
+        lifeSpan = 2
 
         cooldown = 20 # Ticks to cooldown for
 
-        damage = 5
+        # Hit state
+        hitState = Core.HitState(
+            damage=5,
+            force=20,
+            varForce=1/20,
+            vector=Core.Vector(0.1, -0.5)
+        )
 
-        force = 20 # Ticks that the opponent is stun for on hit
-        varForce = 0.1 # Extra force per damage taken
+    class sword:
+        """Attacks for the swordsman class"""
 
-        # Knockback of opponent on hit scaled on force
-        xKnockback = 0.25
-        yKnockback = -0.25#-0.75
+        class basic:
+            """Basic attack"""

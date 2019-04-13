@@ -281,12 +281,11 @@ class Barrier(Entity):
 
 # Basic projectile class
 class Projectile(Entity):
-    """Linear Moving projectile"""
+    """Moving projectile\n
+    Calls callback on hit with a player, providing self,player as arguments\n
+    If a callback isnt provided, the Projectile will kill itself on collision"""
 
-    def __init__(self, rect, image=None, xSpeed=0, ySpeed=0, lifeSpan=-1):
-        """Creates a projectile object for game
-           If lifespan is set to False, the projectile is immortal,
-           otherwise it lives for the lifespan number of ticks"""
+    def __init__(self, rect, image=None, xSpeed=0, ySpeed=0, lifeSpan=-1, callback=None):
 
         # Call standard entity constructor
         super().__init__(rect, image)
@@ -297,11 +296,7 @@ class Projectile(Entity):
 
         self.age = lifeSpan
 
-        # Shows if there was a collision last tick
-        self.collided = False
-
-        # Which players the projectile collided with
-        self.hits = None
+        self.callback = callback
 
     def update(self, game: "Game"):
 
@@ -317,12 +312,13 @@ class Projectile(Entity):
             self.rect.x += self.xSpeed
             self.rect.y += self.ySpeed
 
-            # Check for player collisions and update signal
-            self.hits = self.collisions(game.get_players())
-            if len(self.hits) > 0:
-                self.collided = True
-            else:
-                self.collided = False
+            # Check for player collisions
+            for player in self.collisions(game.get_players()):
+                if self.callback is None:
+                    self.kill()
+                    break # Dont bother checking other players, no behavior to callback
+                else:
+                    self.callback(self, player)
 
 # Main game class (very unrefined)
 class Game:

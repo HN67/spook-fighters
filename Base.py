@@ -196,6 +196,56 @@ class Controller(pygame.sprite.Sprite):
         """Updates the entity"""
         raise NotImplementedError(f"{type(self)} does not update")
 
+# Attack class that handles freeze and references
+# Could be used manually to add projectiles to it, but is also
+# Used a lot in the Mechanics file to implement custom attack
+class Attack(Controller):
+    """Abstract Base class for attack controllers that manage projectiles"""
+
+    def __init__(self, player: "Player", cooldown: int, lifeSpan: int):
+        super().__init__(player.rect.copy())
+
+        # Reference player
+        self.player = player
+
+        # Apply cooldown
+        self.player.cooldown = cooldown
+
+        # Init age for tick count
+        self.tick = 0
+        self.lifeSpan = lifeSpan
+
+        # Dictionary of lists for holding projectiles
+        self.projectileBuffer = {}
+
+        # Group of active projectiles
+        self.projectiles = pygame.sprite.Group()
+
+    def add_projectile(self, projectile, birthTick: int):
+        """Adds a projectile to the Attack to monitor\n
+        The projectile will be added to a 'Game' on the birth tick
+        """
+        # Add or create the projectile to a list in the projBuffer
+        if birthTick in self.projectileBuffer:
+            self.projectileBuffer[birthTick].add(projectile)
+        else:
+            self.projectileBuffer[birthTick] = [projectile]
+
+    def update(self, game: "Game"):
+        """Updates the entity"""
+        self.tick += 1
+
+        # Checks for death. note: This will still finish remaining code for this update
+        if self.tick == self.lifeSpan:
+            self.kill()
+
+        # Check if projectiles should be created
+        if self.tick in self.projectileBuffer:
+            # Add the projectiles to the game
+            game.add_projectiles(self.projectileBuffer[self.tick])
+            # Remove that set from the dict
+            del self.projectileBuffer[self.tick]
+
 # Label class for display numbers and text
 class Label(pygame.sprite.Sprite):
     """Class for creating text labels"""

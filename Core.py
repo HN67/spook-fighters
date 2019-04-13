@@ -102,3 +102,26 @@ class Variable:
     """Stores a variable, can be used to pass immutables by reference"""
 
     value: typing.Any
+
+@dataclass
+class HitState:
+    """Holds the fields required for player.hit()"""
+
+    damage: int
+    force: float
+    varForce: float
+    vector: Vector
+
+    def mapping(self):
+        """Returns the fields as a dictionary, for splatting"""
+        return {
+            "damage": self.damage, "force": self.force,
+            "varForce": self.varForce, "vector": self.vector
+        }
+
+    def copy(self):
+        """Returns a deepish copy, assuming all parameters are normal types"""
+        return HitState(
+            self.damage, self.force, self.varForce,
+            Vector(self.vector.x, self.vector.y)
+        )
