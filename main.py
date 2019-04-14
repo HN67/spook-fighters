@@ -36,6 +36,7 @@ class Player(Entity):
         RIGHT = enum.auto()
 
         ACTION = enum.auto()
+        ATTACK = enum.auto()
 
     def __init__(self, rect, *, color=Core.Color.BLACK, image=None,
                  keyset: Core.Keyset, attributes: Core.PlayerAttributes
@@ -119,6 +120,8 @@ class Player(Entity):
                     playerEvents.add(Player.Events.UP)
                 elif event.key == self.keyset.ACTION:
                     playerEvents.add(Player.Events.ACTION)
+                elif event.key == self.keyset.ATTACK:
+                    playerEvents.add(Player.Events.ATTACK)
 
         # Return player events
         return playerEvents
@@ -251,6 +254,10 @@ class Player(Entity):
                 if self.Events.ACTION in events:
                     # Create Grab Attack
                     game.add_controllers(Mechanics.Grab(self))
+                # Attack event
+                if self.Events.ATTACK in events:
+                    # Create slash attack
+                    game.add_controllers(Mechanics.Slash(self))
 
         else:
 

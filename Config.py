@@ -49,7 +49,8 @@ class player:
         DOWN=115, # S
         LEFT=97, # A
         RIGHT=100, # D
-        ACTION=113, # Q
+        ACTION=99, # C
+        ATTACK=118, # V
 
     )
 
@@ -60,7 +61,8 @@ class player:
         DOWN=274, # Down Arrow
         RIGHT=275, # > Arrow
         LEFT=276, # < Arrow
-        ACTION=47, # / key
+        ACTION=117, # U
+        ATTACK=105, # I
 
     )
 
@@ -105,3 +107,21 @@ class attack:
 
         class basic:
             """Basic attack"""
+
+            hitState = Core.HitState(
+                damage=15,
+                force=30,
+                varForce=1/5,
+                vector=Core.Vector(0.1, -0.25)
+            )
+
+            xSpeed = 10
+            ySpeed = 2
+
+            lifeSpan = 10
+
+            cooldown = 60
+
+            # Width and height of the actual projectile
+            width = 10
+            height = 10

@@ -76,7 +76,9 @@ class Keyset:
     RIGHT: int
     UP: int
     DOWN: int
+
     ACTION: int
+    ATTACK: int
 
 def collides(spriteA, spriteB):
     """Returns true if sprites arent the same, and if collide_rect returns true"""
