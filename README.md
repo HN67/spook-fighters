@@ -1,22 +1,38 @@
-# spook-fighters
-A repository for the development of the free open-source game Spook Fighters. This is a hobby project, and is currently under volatile development.
+# Spook Fighters
 
-# playing
-If you wish to play Spook Fighters, simply download the main.exe file from dist and run it.
+A repository for the fighter game Spook Fighters, built with Pygame. This is a hobby project under volatile development.
 
-Alternatively, to natively run the game, you need Python 3.7+ and Pygame 1.9+ (older versions may or may not work). Clone the repo and then run the main.py file and it should start.
+## Play
 
-If you have never used Python before, simply install it from https://www.python.org/downloads/release/python-372/ and then open command prompt and run 'pip install pygame'.
+To play Spook Fighters, download the [main.exe](https://github.com/HN67/spook-fighters/blob/master/dist/main.exe) file from `dist`.
 
-# mechanics
-Possible Mechanic Designs:
+Alternatively, to natively run the game, install [Python 3.7+](https://www.python.org/downloads/) and [Pygame 1.9+](https://www.pygame.org/wiki/GettingStarted). Clone the repository and run the `main.py` file to play the native, potentially experiemental version.
 
-Health:
-- Unknown mechanic
-- Either knockback damage scaling, or a regular healthbar (with regen portion)
+___
 
-Attacks
-- Basic grab
-- Class dependent basic attack
-- Class dependent special attack
-- Class dependent ultimate
+## Gameplay
+
+### Controls
+
+Action | Player 1 | Player 2
+-------|----------|---------
+Jump | W | ↑
+Move Left | A | ←
+Move Right | D | →
+Fast Fall | S | ↓
+Stun | C | I
+Basic Attack | V | O
+
+### Mechanics
+
+#### Health
+
+- Take damage from attacks
+- Knockback scales from damage
+
+#### Attacks
+
+- Basic stun
+- Class standard attack
+- Class special attack
+- Class ultimate

@@ -61,8 +61,8 @@ class player:
         DOWN=274, # Down Arrow
         RIGHT=275, # > Arrow
         LEFT=276, # < Arrow
-        ACTION=117, # U
-        ATTACK=105, # I
+        ACTION=105, # I
+        ATTACK=111, # O
 
     )
 
