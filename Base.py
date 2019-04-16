@@ -1,5 +1,8 @@
 """Base classes and functionality for Spook Fighters"""
 
+# Import bundled modules
+import typing
+
 # Import structure libraries
 import pygame
 
@@ -13,7 +16,7 @@ class Entity(pygame.sprite.Sprite):
 
     def __init__(self, rect, image=None):
         # Call superclass Sprite init
-        pygame.sprite.Sprite.__init__(self)
+        super().__init__()
 
         # Create image
         if image is None:
@@ -42,6 +45,10 @@ class Entity(pygame.sprite.Sprite):
         else:
             raise ValueError(f"Invalid direction {direction}")
 
+    def solid(self, edge: Dir): #pylint: disable=unused-argument
+        """Check if this edge of the Entity is solid for collisions"""
+        return True
+
     def touching(self, entities, direction: Dir):
         """Checks if this Entity is aligned with any entities"""
         # Create ghost
@@ -68,14 +75,17 @@ class Entity(pygame.sprite.Sprite):
         return ghost.collisions(entities)
 
     def collisions(self, entities):
-        """Checks if self collides with every entity in group 'entities'"""
-        return pygame.sprite.spritecollide(self, entities, False, collided=Core.collides)
+        """Returns a group of the entiites there is a collisions with in group 'entities'"""
+        return pygame.sprite.Group(
+            *pygame.sprite.spritecollide(self, entities, False, collided=Core.collides)
+        )
 
-    def move(self, dX: int, dY: int, entities):
+    def move(self, dX: int, dY: int, entities: pygame.sprite.Group):
         """Moves to a new position and takes into account collisions"""
 
-        # Reference current position
-        ghost = Ghost(self)
+        # Determine directions
+        directionX = Dir.direction_x(dX)
+        directionY = Dir.direction_y(dY)
 
         # Create collision saver
         collided = Pair(False, False)
@@ -83,21 +93,31 @@ class Entity(pygame.sprite.Sprite):
         # Construct future position
         future = self.rect.copy()
 
+        # Reference current position
+        ghost = Ghost(self)
+
         # Try moving x
         ghost.rect.x += dX
         # Check collisions
         collisions = ghost.collisions(entities)
+        # Set of already check barriers
+        checked = pygame.sprite.Group()
         # Fix each collision
         while len(collisions) > 0:
-            # Remember that a collision happened
-            collided.x = True
-            # Align ghost based on direction
-            if dX > 0:
-                ghost.align(collisions[0], Dir.RIGHT)
+            # Reference current
+            current = list(collisions)[0]
+            # Check if barrier is solid (on edge opposing movement)
+            if current.solid(-directionX):
+                # Remember collision
+                collided.x = True
+                # Align based on direction
+                ghost.align(current, directionX)
             else:
-                ghost.align(collisions[0], Dir.LEFT)
+                # remember this entity has been checked
+                checked.add(current)
             # Recheck for collisions
             collisions = ghost.collisions(entities)
+            collisions.remove(checked)
         # Save rect x
         future.x = ghost.rect.x
 
@@ -108,17 +128,24 @@ class Entity(pygame.sprite.Sprite):
         ghost.rect.y += dY
         # Check collisions
         collisions = ghost.collisions(entities)
+        # Set of already check barriers
+        checked = pygame.sprite.Group()
         # Fix each collision
         while len(collisions) > 0:
-            # Remember that a collision happened
-            collided.y = True
-            # Align ghost based on direction
-            if dY > 0:
-                ghost.align(collisions[0], Dir.DOWN)
+            # Reference current
+            current = list(collisions)[0]
+            # Check if barrier is solid (on edge opposing movement)
+            if current.solid(-directionY):
+                # Remember collision
+                collided.y = True
+                # Align based on direction
+                ghost.align(current, directionY)
             else:
-                ghost.align(collisions[0], Dir.UP)
+                # remember this entity has been checked
+                checked.add(current)
             # Recheck for collisions
             collisions = ghost.collisions(entities)
+            collisions.remove(checked)
         # Save rect y
         future.y = ghost.rect.y
 
@@ -131,22 +158,22 @@ class Entity(pygame.sprite.Sprite):
         collisions = ghost.collisions(entities)
         # Fix each collision
         while len(collisions) > 0:
-            # Remember that a collision (corner) happened
-            collided.x = True
-            collided.y = True
-            # Align ghost based on direction
-            # X Align
-            if dX > 0:
-                ghost.align(collisions[0], Dir.RIGHT)
+            # Reference current
+            current = list(collisions)[0]
+            # Check if edge is solid based on direction
+            if current.solid(-directionX) or current.solid(-directionY):
+                # Remember collision
+                collided.x = True
+                collided.y = True
+                # Align with corner
+                ghost.align(current, directionX)
+                ghost.align(current, directionY)
             else:
-                ghost.align(collisions[0], Dir.LEFT)
-            # Y align
-            if dY > 0:
-                ghost.align(collisions[0], Dir.DOWN)
-            else:
-                ghost.align(collisions[0], Dir.UP)
+                # remember this entity has been checked
+                checked.add(current)
             # Recheck for collisions
             collisions = ghost.collisions(entities)
+            collisions.remove(checked)
 
         # Move ghost to self
         self.rect = ghost.rect
@@ -166,7 +193,9 @@ class Ghost(Entity):
 
     def collisions(self, entities):
         """Checks for collisions in SpriteGroup, not colliding with self or alias"""
-        return pygame.sprite.spritecollide(self, entities, False, collided=self._collides)
+        return pygame.sprite.Group(
+            *pygame.sprite.spritecollide(self, entities, False, collided=self._collides)
+        )
 
     def _collides(self, this, other):
         """For use with the collisions method"""
@@ -245,6 +274,35 @@ class Attack(Controller):
             game.add_projectiles(self.projectileBuffer[self.tick])
             # Remove that set from the dict
             del self.projectileBuffer[self.tick]
+
+# Basic barrier class
+class Barrier(Entity):
+    """Creates barrier, using rect and optionally image
+        Color will override image
+    """
+
+    def __init__(self, rect, image=None, color=None):
+
+        super().__init__(rect, image)
+
+        if color is not None:
+            self.image.fill(color)
+
+    def update(self, game: "Game"):
+        pass
+
+# Directional barrier class
+class DirectionalBarrier(Barrier):
+    """Creates barrier that only resists movement in certain directions"""
+
+    def __init__(self, rect, directions: typing.Set[Core.Dir], image=None, color=None):
+        super().__init__(rect, image=image, color=color)
+
+        self.directions = directions
+
+    def solid(self, direction: Dir):
+        """Check if this edge of the Entity is solid for collisions"""
+        return (direction in self.directions)
 
 # Label class for display numbers and text
 class Label(pygame.sprite.Sprite):

@@ -23,6 +23,40 @@ class Dir(Enum):
     RIGHT = (1, 0)
     DOWN = (0, 1)
     LEFT = (-1, 0)
+    NONE = (0, 0)
+
+    @classmethod
+    def opposite(cls, direction):
+        """Returns the opposite direction"""
+        return {
+            cls.UP: cls.DOWN, cls.DOWN: cls.UP,
+            cls.LEFT: cls.RIGHT, cls.RIGHT: cls.LEFT,
+            cls.NONE: cls.NONE
+        }[direction]
+
+    def __neg__(self):
+        """Negates the direction by calling .opposite(self)"""
+        return type(self).opposite(self)
+
+    @classmethod
+    def direction_x(cls, value):
+        """Returns a direction based on sign"""
+        if value > 0:
+            return cls.RIGHT
+        elif value < 0:
+            return cls.LEFT
+        else:
+            return cls.NONE
+
+    @classmethod
+    def direction_y(cls, value):
+        """Returns a direction based on sign"""
+        if value > 0:
+            return cls.DOWN
+        elif value < 0:
+            return cls.UP
+        else:
+            return cls.NONE
 
 class Color:
     """Color RGB constants"""

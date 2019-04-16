@@ -6,6 +6,7 @@
 # Import modules
 import enum
 from enum import Enum
+import typing
 
 # Import pygame
 import pygame
@@ -269,23 +270,6 @@ class Player(Entity):
                 self.cooldown = 0
 
 
-# Basic barrier class
-class Barrier(Entity):
-    """Creates barrier, using rect and optionally image
-        Color will override image
-    """
-
-    def __init__(self, rect, image=None, color=None):
-
-        super().__init__(rect, image)
-
-        if color is not None:
-            self.image.fill(color)
-
-    def update(self, game: "Game"):
-        pass
-
-
 # Basic projectile class
 class Projectile(Entity):
     """Moving projectile\n
@@ -460,7 +444,6 @@ def cornerRect(left, top, right, bottom):
     """Creates a Rect using corners"""
     return pygame.Rect(left, top, right - left, bottom - top)
 
-
 # Debug info function that can turn off all debug print statements
 if DEBUG_INFO:
     def debug(*value, sep=" ", end="\n"):
@@ -513,25 +496,26 @@ def setup_game(screen):
 
         # Screen borders
         # Stage bottom border
-        Barrier(cornerRect(-100, Config.game.height,
-                           Config.game.width + 100, Config.game.height + 100)),
+        Base.Barrier(cornerRect(-100, Config.game.height,
+                                Config.game.width + 100, Config.game.height + 100)),
 
         # Stage wall borders
-        Barrier(cornerRect(-100, 0, 0, Config.game.height)), # LEFT
-        Barrier(cornerRect(Config.game.width, 0,
-                           Config.game.width + 100, Config.game.height)), # RIGHT
+        Base.Barrier(cornerRect(-100, 0, 0, Config.game.height)), # LEFT
+        Base.Barrier(cornerRect(Config.game.width, 0,
+                                Config.game.width + 100, Config.game.height)), # RIGHT
 
         # Stage ceiling border
-        Barrier(cornerRect(-100, -100, Config.game.width + 100, 0)),
+        Base.Barrier(cornerRect(-100, -100, Config.game.width + 100, 0)),
 
         # Floor/ground
-        Barrier(cornerRect(0, Config.game.height - Config.stage.floorHeight,
-                           Config.game.width, Config.game.height),
-                color=Color.DARKGREEN),
+        Base.Barrier(cornerRect(0, Config.game.height - Config.stage.floorHeight,
+                                Config.game.width, Config.game.height),
+                     color=Color.DARKGREEN),
 
         # Floating platform
-        Barrier(pygame.Rect(Config.game.width/2 - 200, 200,
-                            400, 100), color=Color.DARKGREEN),
+        Base.DirectionalBarrier(pygame.Rect(Config.game.width/2 - 200, 300,
+                                            400, 15),
+                                {Core.Dir.UP}, color=Color.DARKGREEN),
 
     )
     game.add_barriers(*blocks)
