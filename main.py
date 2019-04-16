@@ -6,7 +6,6 @@
 # Import modules
 import enum
 from enum import Enum
-import typing
 
 # Import pygame
 import pygame
@@ -217,12 +216,21 @@ class Player(Entity):
         # Move with collisions enabled
         self.collided = self.move(self.xSpeed, self.ySpeed, solids)
 
+        # Check for platforms # TODO, phase issues (is it fixable?)
+        # Also, improve intentional falling (double tap somehow? or pressed when on standing on platform)
+        # Phase through if DOWN key pressed
+        if self.ySpeed > 0 and self.touching(game.get_platforms(), Dir.DOWN):
+            # Align
+            self.align(list(game.get_platforms())[0], Dir.DOWN)
+            # Set collided
+            self.collided.y = True
+
         # React to collisions
         # Vertical floor/ceiling collision
         if self.collided.y:
 
-            # Reset jumps on floor collision
-            if self.touching(solids, Dir.DOWN):
+            # Reset jumps on floor or platform collision
+            if self.touching(solids, Dir.DOWN) or self.touching(game.get_platforms(), Dir.DOWN):
                 self.jumps = self.attributes.airJumps
 
             # Zero vertical speed due to vertical collision
@@ -329,6 +337,8 @@ class Game:
         self.allSprites = pygame.sprite.Group()
         # Barriers: solid ground for players to jump off
         self.barriers = pygame.sprite.Group()
+        # Platforms: one way platforms that players can jump through
+        self.platforms = pygame.sprite.Group()
         # Players: controllable characters
         self.players = pygame.sprite.Group()
         # Solids: they are used for collisions
@@ -403,6 +413,12 @@ class Game:
         self.solids.add(*barriers)
         self.visibles.add(*barriers)
 
+    def add_platforms(self, *platforms):
+        """Adds platforms to the game"""
+        self.platforms.add(*platforms)
+        self.allSprites.add(*platforms)
+        self.visibles.add(*platforms)
+
     def create_player(self, player):
         """Add a player to the game"""
         self.players.add(player)
@@ -437,6 +453,10 @@ class Game:
     def get_barriers(self):
         """Returns the barriers of the game"""
         return self.barriers
+
+    def get_platforms(self):
+        """Returns the platforms of the game"""
+        return self.platforms
 
 ## Define some top-scope functions
 # Function to produce a corner-rect
@@ -512,13 +532,17 @@ def setup_game(screen):
                                 Config.game.width, Config.game.height),
                      color=Color.DARKGREEN),
 
-        # Floating platform
-        Base.DirectionalBarrier(pygame.Rect(Config.game.width/2 - 200, 300,
-                                            400, 15),
-                                {Core.Dir.UP}, color=Color.DARKGREEN),
-
     )
     game.add_barriers(*blocks)
+
+    # Passable platforms
+    platforms = (
+        # Floating platform
+        Base.Barrier(pygame.Rect(Config.game.width/2 - 200, 300,
+                                            400, 15),
+                                 color=Color.DARKGREEN),
+    )
+    game.add_platforms(*platforms)
 
     # Create labels
     labels = (

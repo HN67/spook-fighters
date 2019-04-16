@@ -300,9 +300,9 @@ class DirectionalBarrier(Barrier):
 
         self.directions = directions
 
-    def solid(self, direction: Dir):
+    def solid(self, edge: Dir):
         """Check if this edge of the Entity is solid for collisions"""
-        return (direction in self.directions)
+        return edge in self.directions
 
 # Label class for display numbers and text
 class Label(pygame.sprite.Sprite):
