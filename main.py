@@ -99,6 +99,34 @@ class Player(Entity):
         self.xSpeed = vector.x * totalForce
         self.ySpeed = vector.y * totalForce
 
+    def snap_platforms(self, platforms: pygame.sprite.Group, presses: set, oldRect: pygame.Rect, ):
+        """Logic for colliding with platforms"""
+        # Setup collision groups
+        collisions = self.collisions(platforms)
+        checked = pygame.sprite.Group()
+        # Fix each collisions
+        while len(collisions) > 0:
+            # Reference current
+            current = list(collisions)[0]
+            # Collide if conditions met
+            if (
+                # Check that you fell on the platform
+                oldRect.bottom <= current.rect.top
+                # Allow phasing with S key
+                and not self.Events.DOWN in presses
+            ):
+                # Align
+                self.align(current, Dir.DOWN)
+                # Set collided
+                self.collided.y = True
+            # Otherwise, remeber this entity is okay
+            else:
+                # remember this entity has been checked
+                checked.add(current)
+            # Recheck for collisions
+            collisions = self.collisions(platforms)
+            collisions.remove(checked)
+
     def parse_events(self, pyEvents, keysHeld):
         """Parses PyGame events and held keys into Player events using its keyset
         Returns (newEvents, currentEvents)
@@ -126,7 +154,7 @@ class Player(Entity):
         for event in pyEvents:
             if event.type == pygame.KEYDOWN:
                 if event.key == self.keyset.LEFT:
-                    pressEvents.add(Player.Events.DOWN)
+                    pressEvents.add(Player.Events.LEFT)
                 if event.key == self.keyset.RIGHT:
                     pressEvents.add(Player.Events.RIGHT)
                 if event.key == self.keyset.DOWN:
@@ -149,8 +177,9 @@ class Player(Entity):
         solids = game.get_solids()
         presses, events = self.parse_events(game.get_events(), game.keys_held())
 
-        # Gravity pull
-        self.ySpeed += self.attributes.gravity
+        # Gravity pull if in air
+        if not self.touching(solids, Dir.DOWN):
+            self.ySpeed += self.attributes.gravity
 
         # Check to make sure not stunned for most movement options
         if self.stun == 0:
@@ -227,17 +256,14 @@ class Player(Entity):
 
         # TODO update() method needs to be broken into logical components
 
+        # Save old rect
+        oldRect = self.rect.copy()
+        
         # Move with collisions enabled
         self.collided = self.move(self.xSpeed, self.ySpeed, solids)
 
-        # Check for platforms # TODO, phase issues (is it fixable?)
-        # Also, improve intentional falling (double tap somehow? or pressed when on standing on platform)
-        # Phase through if DOWN key pressed
-        if self.ySpeed > 0 and self.touching(game.get_platforms(), Dir.DOWN):
-            # Align
-            self.align(list(game.get_platforms())[0], Dir.DOWN)
-            # Set collided
-            self.collided.y = True
+        # Check for platforms
+        self.snap_platforms(game.get_platforms(), presses, oldRect)
 
         # React to collisions
         # Vertical floor/ceiling collision
