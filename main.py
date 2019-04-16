@@ -99,41 +99,55 @@ class Player(Entity):
         self.xSpeed = vector.x * totalForce
         self.ySpeed = vector.y * totalForce
 
-    def parse_events(self, events, keysHeld):
-        """Parses PyGame events and held keys into Player events using its keyset"""
+    def parse_events(self, pyEvents, keysHeld):
+        """Parses PyGame events and held keys into Player events using its keyset
+        Returns (newEvents, currentEvents)
+        """
 
         # Create player events set
-        playerEvents = set()
+        events = set()
+        pressEvents = set()
 
-        # Check for held keys (LEFT/RIGHT/DOWN)
+        # Check for held keys
         if keysHeld[self.keyset.LEFT]:
-            playerEvents.add(Player.Events.LEFT)
+            events.add(Player.Events.LEFT)
         if keysHeld[self.keyset.RIGHT]:
-            playerEvents.add(Player.Events.RIGHT)
+            events.add(Player.Events.RIGHT)
         if keysHeld[self.keyset.DOWN]:
-            playerEvents.add(Player.Events.DOWN)
+            events.add(Player.Events.DOWN)
+        if keysHeld[self.keyset.UP]:
+            events.add(Player.Events.UP)
+        if keysHeld[self.keyset.ACTION]:
+            events.add(Player.Events.ACTION)
+        if keysHeld[self.keyset.ATTACK]:
+            events.add(Player.Events.ATTACK)
 
-        # Check for pressed keys (UP)
-        for event in events:
+        # Check for newly pressed keys
+        for event in pyEvents:
             if event.type == pygame.KEYDOWN:
+                if event.key == self.keyset.LEFT:
+                    pressEvents.add(Player.Events.DOWN)
+                if event.key == self.keyset.RIGHT:
+                    pressEvents.add(Player.Events.RIGHT)
+                if event.key == self.keyset.DOWN:
+                    pressEvents.add(Player.Events.DOWN)
                 if event.key == self.keyset.UP:
-                    playerEvents.add(Player.Events.UP)
+                    pressEvents.add(Player.Events.UP)
                 elif event.key == self.keyset.ACTION:
-                    playerEvents.add(Player.Events.ACTION)
+                    pressEvents.add(Player.Events.ACTION)
                 elif event.key == self.keyset.ATTACK:
-                    playerEvents.add(Player.Events.ATTACK)
+                    pressEvents.add(Player.Events.ATTACK)
 
         # Return player events
-        return playerEvents
+        return (pressEvents, events)
 
     def update(self, game: "Game"):
-        """Updates the physics of the Player, when colliding with the entities SpriteGroup
-           And with events from Player.Events passed in"""
+        """Updates the physics of the Player"""
 
         # Reference collected data
         barriers = game.get_barriers()
         solids = game.get_solids()
-        events = self.parse_events(game.get_events(), game.keys_held())
+        presses, events = self.parse_events(game.get_events(), game.keys_held())
 
         # Gravity pull
         self.ySpeed += self.attributes.gravity
@@ -169,7 +183,7 @@ class Player(Entity):
                 self.ySpeed += self.attributes.fastfall
 
             # Jump code
-            if (self.Events.UP in events) and (self.jumps > 0):
+            if (self.Events.UP in presses) and (self.jumps > 0):
 
                 # Decrement jump counter if in air # CAN JUMP OFF ANY SOLID
                 if not (self.touching(solids, Dir.DOWN) or
@@ -260,11 +274,11 @@ class Player(Entity):
             # Also cant be movement stunned
             if self.stun == 0:
                 # Action event
-                if self.Events.ACTION in events:
+                if self.Events.ACTION in presses:
                     # Create Grab Attack
                     game.add_controllers(Mechanics.Grab(self))
                 # Attack event
-                if self.Events.ATTACK in events:
+                if self.Events.ATTACK in presses:
                     # Create slash attack
                     game.add_controllers(Mechanics.Slash(self))
 
