@@ -195,7 +195,7 @@ class Player(Entity):
 
         # Gravity pull if in air
         if (
-                not self.touching(solids, Dir.DOWN) 
+                not self.touching(solids, Dir.DOWN)
                 and not self.touching(game.get_platforms(), Dir.DOWN)
             ):
             self.ySpeed += self.attributes.gravity

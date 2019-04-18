@@ -97,7 +97,7 @@ class attack:
         # Hit state
         hitState = Core.HitState(
             damage=1,
-            force=20,
+            force=10,
             varForce=0,
             vector=Core.Vector(0.5, 0)
         )
