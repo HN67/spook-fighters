@@ -39,9 +39,9 @@ def Grab(player: "Player"):
     # Create hitstate from config, change vector x based on direction
     hitState = Config.attack.grab.hitState.copy()
     if player.xDirection == Core.Dir.LEFT:
-        hitState.vector.x = -hitState.vector.x
+        hitState.vector.x = hitState.vector.x
     elif player.xDirection == Core.Dir.RIGHT:
-        hitState.vector.x *= 1
+        hitState.vector.x *= -1
 
     # Setup callback for first and only projectile
     def call(projectile, player):

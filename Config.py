@@ -90,16 +90,16 @@ class attack:
         width = 10
 
         speed = 5 # Relative horizontal speed
-        lifeSpan = 2
+        lifeSpan = 6
 
-        cooldown = 10 # Ticks to cooldown for
+        cooldown = 15 # Ticks to cooldown for
 
         # Hit state
         hitState = Core.HitState(
-            damage=5,
-            force=50,
+            damage=1,
+            force=10,
             varForce=1/20,
-            vector=Core.Vector(0, -0.1)
+            vector=Core.Vector(0.5, 0)
         )
 
     class sword:
@@ -109,18 +109,18 @@ class attack:
             """Basic attack"""
 
             hitState = Core.HitState(
-                damage=15,
-                force=30,
-                varForce=1/5,
-                vector=Core.Vector(0.1, -0.25)
+                damage=7,
+                force=8,
+                varForce=1/10,
+                vector=Core.Vector(0.5, -1)
             )
 
             xSpeed = 10
-            ySpeed = 2
+            ySpeed = 0
 
-            lifeSpan = 10
+            lifeSpan = 3
 
-            cooldown = 60
+            cooldown = 25
 
             # Width and height of the actual projectile
             width = 10

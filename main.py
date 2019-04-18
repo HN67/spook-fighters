@@ -110,10 +110,10 @@ class Player(Entity):
             current = list(collisions)[0]
             # Collide if conditions met
             if (
-                # Check that you fell on the platform
-                oldRect.bottom <= current.rect.top
-                # Allow phasing with S key
-                and not self.Events.DOWN in presses
+                    # Check that you fell on the platform
+                    oldRect.bottom <= current.rect.top
+                    # Allow phasing with S key
+                    and not self.Events.DOWN in presses
             ):
                 # Align
                 self.align(current, Dir.DOWN)
@@ -258,7 +258,7 @@ class Player(Entity):
 
         # Save old rect
         oldRect = self.rect.copy()
-        
+
         # Move with collisions enabled
         self.collided = self.move(self.xSpeed, self.ySpeed, solids)
 
@@ -275,8 +275,10 @@ class Player(Entity):
 
             # Zero vertical speed due to vertical collision
             self.ySpeed = 0
-            # Reset stun because (prevent combo locking, against floor?)
-            self.stun = 0
+            # Zero horizontal speed
+            self.xSpeed = 0
+            ## Reset stun because (prevent combo locking, against floor?)
+            #self.stun = 0
 
         # Horizontal wall collision
         if self.collided.x:
@@ -290,8 +292,8 @@ class Player(Entity):
             # Zero vertical speed due to wall collision
             self.ySpeed = 0
 
-            # Reset stun to prevent wall locking
-            self.stun = 0
+            ## Reset stun to prevent wall locking
+            #self.stun = 0
 
         # Attack code
         # Only attack if not cooling down
@@ -579,8 +581,8 @@ def setup_game(screen):
     platforms = (
         # Floating platform
         Base.Barrier(pygame.Rect(Config.game.width/2 - 200, 300,
-                                            400, 15),
-                                 color=Color.DARKGREEN),
+                                 400, 15),
+                     color=Color.DARKGREEN),
     )
     game.add_platforms(*platforms)
 
