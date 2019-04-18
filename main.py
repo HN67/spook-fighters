@@ -232,7 +232,8 @@ class Player(Entity):
                 # Decrement jump counter if in air # CAN JUMP OFF ANY SOLID
                 if not (self.touching(solids, Dir.DOWN) or
                         self.touching(solids, Dir.LEFT) or
-                        self.touching(solids, Dir.RIGHT)):
+                        self.touching(solids, Dir.RIGHT) or
+                        self.touching(game.get_platforms(), Dir.DOWN)):
                     self.jumps -= 1
                 # Set y-velocity
                 self.ySpeed = -self.attributes.jump
