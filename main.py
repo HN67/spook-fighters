@@ -135,6 +135,7 @@ class Player(Entity):
         # Create player events set
         events = set()
         pressEvents = set()
+        releaseEvents = set()
 
         # Check for held keys
         if keysHeld[self.keyset.LEFT]:
@@ -150,8 +151,9 @@ class Player(Entity):
         if keysHeld[self.keyset.ATTACK]:
             events.add(Player.Events.ATTACK)
 
-        # Check for newly pressed keys
+        # Check for key events
         for event in pyEvents:
+            # Check for key presses
             if event.type == pygame.KEYDOWN:
                 if event.key == self.keyset.LEFT:
                     pressEvents.add(Player.Events.LEFT)
@@ -165,9 +167,23 @@ class Player(Entity):
                     pressEvents.add(Player.Events.ACTION)
                 elif event.key == self.keyset.ATTACK:
                     pressEvents.add(Player.Events.ATTACK)
+            # Check for releases
+            elif event.type == pygame.KEYUP:
+                if event.key == self.keyset.LEFT:
+                    releaseEvents.add(Player.Events.LEFT)
+                if event.key == self.keyset.RIGHT:
+                    releaseEvents.add(Player.Events.RIGHT)
+                if event.key == self.keyset.DOWN:
+                    releaseEvents.add(Player.Events.DOWN)
+                if event.key == self.keyset.UP:
+                    releaseEvents.add(Player.Events.UP)
+                elif event.key == self.keyset.ACTION:
+                    releaseEvents.add(Player.Events.ACTION)
+                elif event.key == self.keyset.ATTACK:
+                    releaseEvents.add(Player.Events.ATTACK)
 
         # Return player events
-        return (pressEvents, events)
+        return (pressEvents, releaseEvents, events)
 
     def update(self, game: "Game"):
         """Updates the physics of the Player"""
@@ -175,10 +191,13 @@ class Player(Entity):
         # Reference collected data
         barriers = game.get_barriers()
         solids = game.get_solids()
-        presses, events = self.parse_events(game.get_events(), game.keys_held())
+        presses, releases, events = self.parse_events(game.get_events(), game.keys_held())
 
         # Gravity pull if in air
-        if not self.touching(solids, Dir.DOWN):
+        if (
+                not self.touching(solids, Dir.DOWN) 
+                and not self.touching(game.get_platforms(), Dir.DOWN)
+            ):
             self.ySpeed += self.attributes.gravity
 
         # Check to make sure not stunned for most movement options
