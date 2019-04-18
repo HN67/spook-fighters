@@ -553,8 +553,8 @@ def setup_game(screen):
     players = (
         Player(
             pygame.Rect(
-                Config.game.width / 2 - Config.player.width / 2,
-                Config.game.height - Config.stage.floorHeight - 2*Config.player.height,
+                Config.game.width / 2 - Config.player.width*2,
+                0,
                 Config.player.width, Config.player.height,
             ),
             attributes=Config.player.attributes,
@@ -563,8 +563,8 @@ def setup_game(screen):
         ),
         Player(
             pygame.Rect(
-                Config.game.width / 2 - Config.player.width / 2 + 100,
-                Config.game.height - Config.stage.floorHeight - 2*Config.player.height,
+                Config.game.width / 2 + Config.player.width,
+                0,
                 Config.player.width, Config.player.height,
             ),
             attributes=Config.player.attributes,
@@ -580,22 +580,9 @@ def setup_game(screen):
     # Create Barriers
     blocks = (
 
-        # Screen borders
-        # Stage bottom border
-        Base.Barrier(cornerRect(-100, Config.game.height,
-                                Config.game.width + 100, Config.game.height + 100)),
-
-        # Stage wall borders
-        Base.Barrier(cornerRect(-100, 0, 0, Config.game.height)), # LEFT
-        Base.Barrier(cornerRect(Config.game.width, 0,
-                                Config.game.width + 100, Config.game.height)), # RIGHT
-
-        # Stage ceiling border
-        Base.Barrier(cornerRect(-100, -100, Config.game.width + 100, 0)),
-
         # Floor/ground
-        Base.Barrier(cornerRect(0, Config.game.height - Config.stage.floorHeight,
-                                Config.game.width, Config.game.height),
+        Base.Barrier(cornerRect(100, Config.game.height - 200,
+                                Config.game.width - 100, Config.game.height - 100),
                      color=Color.DARKGREEN),
 
     )
@@ -603,9 +590,13 @@ def setup_game(screen):
 
     # Passable platforms
     platforms = (
-        # Floating platform
-        Base.Barrier(pygame.Rect(Config.game.width/2 - 200, 300,
-                                 400, 15),
+        # Floating platforms
+        Base.Barrier(pygame.Rect(100, Config.game.height - 400,
+                                 150, 20),
+                     color=Color.DARKGREEN),
+
+        Base.Barrier(pygame.Rect(Config.game.width - 250, Config.game.height - 400,
+                                 150, 20),
                      color=Color.DARKGREEN),
     )
     game.add_platforms(*platforms)
