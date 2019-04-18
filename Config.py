@@ -92,13 +92,13 @@ class attack:
         speed = 5 # Relative horizontal speed
         lifeSpan = 6
 
-        cooldown = 15 # Ticks to cooldown for
+        cooldown = 10 # Ticks to cooldown for
 
         # Hit state
         hitState = Core.HitState(
             damage=1,
-            force=10,
-            varForce=1/20,
+            force=20,
+            varForce=0,
             vector=Core.Vector(0.5, 0)
         )
 
@@ -110,18 +110,18 @@ class attack:
 
             hitState = Core.HitState(
                 damage=7,
-                force=8,
+                force=10,
                 varForce=1/10,
-                vector=Core.Vector(0.5, -1)
+                vector=Core.Vector(0.1, -1)
             )
 
-            xSpeed = 10
-            ySpeed = 0
+            xSpeed = 5
+            ySpeed = -5
 
-            lifeSpan = 3
+            lifeSpan = 10
 
             cooldown = 25
 
             # Width and height of the actual projectile
-            width = 10
-            height = 10
+            width = 20
+            height = 20
