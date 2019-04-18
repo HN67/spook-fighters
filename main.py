@@ -184,10 +184,6 @@ class Player(Entity):
         # Check to make sure not stunned for most movement options
         if self.stun == 0:
 
-            # Update color
-            if not self.hasImage:
-                self.image.fill(self.color)
-
             # Wall hang logic, only wall hang if not stunned
             if self.touching(barriers, Dir.LEFT) or self.touching(barriers, Dir.RIGHT):
                 # Slow falling: Cant slow faster than slide attribute
@@ -242,10 +238,6 @@ class Player(Entity):
                     self.stun = self.attributes.wallJumpFreeze
 
         else:
-
-            # Make color gray while stunnned
-            if not self.hasImage:
-                self.image.fill(Core.Color.GRAY)
 
             # Detick stun
             self.stun -= 1
@@ -317,8 +309,20 @@ class Player(Entity):
 
             # Align cooldown at 0
             if self.cooldown <= 0:
+
                 self.cooldown = 0
 
+        # Update image
+        if not self.hasImage:
+            # Gray for stun
+            if self.stun > 0:
+                self.image.fill(Core.Color.GRAY)
+            # Darkened for cooling down
+            elif self.cooldown > 0:
+                self.image.fill(Core.Color.scale(self.color, 0.5))
+            # Otherwise normal color
+            else:
+                self.image.fill(self.color)
 
 # Basic projectile class
 class Projectile(Entity):

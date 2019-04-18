@@ -76,6 +76,11 @@ class Color:
 
     SKYBLUE = (0, 200, 200)
 
+    @staticmethod
+    def scale(color: "Color", factor: float):
+        """Returns a copy of the color with each component scaled by factor"""
+        return tuple(component*factor for component in color)
+
 class AttributeSet:
     """Object that holds information on a variety of attributes\n
     Each keyword argument passed is set as an attribute"""
