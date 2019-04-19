@@ -90,6 +90,7 @@ class attack:
         width = 10
 
         speed = 5 # Relative horizontal speed
+
         lifeSpan = 6
 
         cooldown = 10 # Ticks to cooldown caster for
@@ -101,6 +102,9 @@ class attack:
             varForce=1/10,
             vector=Core.Vector(0.5, -0.3)
         )
+
+        upHitState = hitState.copy()
+        upHitState.vector = Core.Vector(0, -0.75)
 
     class sword:
         """Attacks for the swordsman class"""

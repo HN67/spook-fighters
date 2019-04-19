@@ -362,7 +362,7 @@ class Projectile(Entity):
     Calls callback on hit with a player, providing self,player as arguments\n
     If a callback isnt provided, the Projectile will kill itself on collision"""
 
-    def __init__(self, rect, image=None, xSpeed=0, ySpeed=0, lifeSpan=-1,
+    def __init__(self, rect, image=None, xSpeed=0, ySpeed=0, lifeSpan=None,
                  post: typing.Callable = None, callback: typing.Callable = None):
 
         # Call standard entity constructor
@@ -372,7 +372,10 @@ class Projectile(Entity):
         self.xSpeed = xSpeed
         self.ySpeed = ySpeed
 
-        self.age = lifeSpan
+        self.lifeSpan = lifeSpan
+
+        # Init age
+        self.age = 0
 
         self.callback = callback
 
@@ -385,12 +388,12 @@ class Projectile(Entity):
     def update(self, game: "Game"):
 
         # Die at end of lifespan
-        if self.age == 0:
+        if self.lifeSpan is not None and self.age >= self.lifeSpan:
             # Remove from spritegroups
             self.kill()
         else:
-            # Decrement age
-            self.age -= 1
+            # Increase age
+            self.age += 1
 
             # Change position
             self.rect.x += self.xSpeed

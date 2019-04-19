@@ -52,13 +52,20 @@ def Grab(player: "Player"):
             # Delete projectile
             projectile.kill()
 
+    # Make it follow the caster
+    def follow(projectile):
+        projectile.rect.x = ((caster.rect.right if caster.xDirection == Core.Dir.RIGHT 
+                             else (caster.rect.left - cfg.width))
+                             + speed*projectile.age)
+        projectile.rect.y = caster.rect.top
+
     # Add projectile to be created
     attack.add_projectile(
         main.Projectile(
             pygame.Rect(xPosition, attack.rect.top,
                         cfg.width, attack.rect.height),
-            xSpeed=speed, lifeSpan=cfg.lifeSpan,
-            callback=call,
+            lifeSpan=cfg.lifeSpan,
+            callback=call, post=follow,
         ),
         birthTick=1,
     )
@@ -84,9 +91,7 @@ def UpGrab(player: "Player"):
     cfg = Config.attack.grab()
 
     # Create hitstate based from config
-    hitState = Config.attack.grab.hitState.copy()
-    # Make vertical
-    hitState.vector.x = 0
+    hitState = Config.attack.grab.upHitState.copy()
 
     # Setup callback for first and only projectile
     def call(projectile, player):
@@ -100,7 +105,7 @@ def UpGrab(player: "Player"):
     # Make it follow the caster
     def follow(projectile):
         projectile.rect.x = caster.rect.x
-        projectile.rect.y = caster.rect.top - cfg.width
+        projectile.rect.y = caster.rect.top - cfg.width - cfg.speed*projectile.age
 
     # Add projectile to be created
     attack.add_projectile(
