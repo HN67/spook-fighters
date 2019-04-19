@@ -195,6 +195,8 @@ class Player(Entity):
         # Reference collected data
         barriers = game.get_barriers()
         solids = game.get_solids()
+        platforms = game.get_platforms()
+        grounds = pygame.sprite.Group(solids, platforms)
         presses, releases, events = self.parse_events(game.get_events(), game.keys_held())
 
         # Gravity pull if in air and not hanging from cooldown
@@ -319,10 +321,16 @@ class Player(Entity):
                         game.add_controllers(Mechanics.UpGrab(self))
                     else:
                         game.add_controllers(Mechanics.Grab(self))
+                    # Stop if on ground
+                    if self.touching(grounds, Dir.DOWN):
+                        self.xSpeed = 0
                 # Attack event
                 if self.Events.ATTACK in presses:
                     # Create slash attack
                     game.add_controllers(Mechanics.Slash(self))
+                    # Stop if on ground
+                    if self.touching(grounds, Dir.DOWN):
+                        self.xSpeed = 0
 
         # Decrease stun and cooldown
         self.stun -= 1
@@ -350,12 +358,12 @@ class Player(Entity):
 # TODO create after_update passable function or something
 class Projectile(Entity):
     """Moving projectile\n
-    Calls post after every update, defaults to an empty function
+    Calls post after every update, providing self, defaults to an empty function
     Calls callback on hit with a player, providing self,player as arguments\n
     If a callback isnt provided, the Projectile will kill itself on collision"""
 
-    def __init__(self, rect, image=None, xSpeed=0, ySpeed=0, lifeSpan=-1, 
-                 post: typing.Callable=None, callback: typing.Callable=None):
+    def __init__(self, rect, image=None, xSpeed=0, ySpeed=0, lifeSpan=-1,
+                 post: typing.Callable = None, callback: typing.Callable = None):
 
         # Call standard entity constructor
         super().__init__(rect, image)
@@ -370,7 +378,7 @@ class Projectile(Entity):
 
         # Reference post or create
         if post is None:
-            self.post = lambda: None
+            self.post = lambda proj: None
         else:
             self.post = post
 
@@ -397,7 +405,7 @@ class Projectile(Entity):
                     self.callback(self, player)
 
         # Call post update
-        self.post()
+        self.post(self)
 
 # Main game class (very unrefined)
 class Game:
@@ -461,9 +469,13 @@ class Game:
         # Update all sprites
         #self.allSprites.update(self)
         # In specific order
-        self.barriers.update(self)
-        self.projectiles.update(self)
+        # Update barriers (why)?
+        # Update players, create controllers
+        # Update projectiles, sometimes based on players
+        # Update conntrollers, create projectiles
+        # Update labels
         self.players.update(self)
+        self.projectiles.update(self)
         self.controllers.update(self)
         self.labels.update(self)
 

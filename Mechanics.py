@@ -68,6 +68,7 @@ def Grab(player: "Player"):
 
 # Up grab
 def UpGrab(player: "Player"):
+    """Creates a grab in the upwards direction"""
 
     # Reference player (different name to prevent masking in callback)
     caster = player
@@ -96,13 +97,18 @@ def UpGrab(player: "Player"):
             # Delete projectile
             projectile.kill()
 
+    # Make it follow the caster
+    def follow(projectile):
+        projectile.rect.x = caster.rect.x
+        projectile.rect.y = caster.rect.top - cfg.width
+
     # Add projectile to be created
     attack.add_projectile(
         main.Projectile(
             pygame.Rect(attack.rect.left, attack.rect.top - cfg.width,
                         attack.rect.width, cfg.width),
-            ySpeed=cfg.speed + caster.ySpeed, lifeSpan=cfg.lifeSpan,
-            callback=call,
+            lifeSpan=cfg.lifeSpan,
+            callback=call, post=follow,
         ),
         birthTick=1,
     )
