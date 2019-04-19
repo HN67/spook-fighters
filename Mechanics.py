@@ -101,7 +101,7 @@ def UpGrab(player: "Player"):
         main.Projectile(
             pygame.Rect(attack.rect.left, attack.rect.top - cfg.width,
                         attack.rect.width, cfg.width),
-            ySpeed=cfg.speed, lifeSpan=cfg.lifeSpan,
+            ySpeed=cfg.speed + caster.ySpeed, lifeSpan=cfg.lifeSpan,
             callback=call,
         ),
         birthTick=1,

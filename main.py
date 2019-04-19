@@ -6,6 +6,7 @@
 # Import modules
 import enum
 from enum import Enum
+import typing
 
 # Import pygame
 import pygame
@@ -346,12 +347,15 @@ class Player(Entity):
                 self.image.fill(self.color)
 
 # Basic projectile class
+# TODO create after_update passable function or something
 class Projectile(Entity):
     """Moving projectile\n
+    Calls post after every update, defaults to an empty function
     Calls callback on hit with a player, providing self,player as arguments\n
     If a callback isnt provided, the Projectile will kill itself on collision"""
 
-    def __init__(self, rect, image=None, xSpeed=0, ySpeed=0, lifeSpan=-1, callback=None):
+    def __init__(self, rect, image=None, xSpeed=0, ySpeed=0, lifeSpan=-1, 
+                 post: typing.Callable=None, callback: typing.Callable=None):
 
         # Call standard entity constructor
         super().__init__(rect, image)
@@ -363,6 +367,12 @@ class Projectile(Entity):
         self.age = lifeSpan
 
         self.callback = callback
+
+        # Reference post or create
+        if post is None:
+            self.post = lambda: None
+        else:
+            self.post = post
 
     def update(self, game: "Game"):
 
@@ -385,6 +395,9 @@ class Projectile(Entity):
                     break # Dont bother checking other players, no behavior to callback
                 else:
                     self.callback(self, player)
+
+        # Call post update
+        self.post()
 
 # Main game class (very unrefined)
 class Game:
