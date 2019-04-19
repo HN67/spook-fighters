@@ -240,6 +240,9 @@ class Attack(Controller):
         # Apply cooldown
         self.player.cooldown = cooldown
 
+        # Stop player
+        self.player.xSpeed = 0
+
         # Init age for tick count
         self.tick = 0
         self.lifeSpan = lifeSpan

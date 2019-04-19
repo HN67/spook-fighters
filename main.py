@@ -24,7 +24,10 @@ import Mechanics
 # Determines if debug info is shown
 DEBUG_INFO = True
 
-# Basic testing class
+# Basic player class
+# Important notes:
+# Stun is applied by being hit
+# Cooldown is stun from starting a move
 class Player(Entity):
     """This represents a controllable player"""
 
@@ -193,7 +196,7 @@ class Player(Entity):
         solids = game.get_solids()
         presses, releases, events = self.parse_events(game.get_events(), game.keys_held())
 
-        # Gravity pull if in air
+        # Gravity pull if in air and not hanging from cooldown
         if (
                 not self.touching(solids, Dir.DOWN)
                 and not self.touching(game.get_platforms(), Dir.DOWN)
@@ -201,7 +204,7 @@ class Player(Entity):
             self.ySpeed += self.attributes.gravity
 
         # Check to make sure not stunned for most movement options
-        if self.stun == 0:
+        if self.stun == 0 and self.cooldown == 0:
 
             # Wall hang logic, only wall hang if not stunned
             if self.touching(barriers, Dir.LEFT) or self.touching(barriers, Dir.RIGHT):
@@ -257,22 +260,17 @@ class Player(Entity):
                     # Freeze movement temporarily
                     self.stun = self.attributes.wallJumpFreeze
 
-        else:
-
-            # Detick stun
-            self.stun -= 1
-
-            # Align stun at 0
-            if self.stun <= 0:
-                self.stun = 0
-
         # TODO update() method needs to be broken into logical components
+
+        # Dont move if cooling
+        dX = self.xSpeed
+        dY = self.ySpeed
 
         # Save old rect
         oldRect = self.rect.copy()
 
         # Move with collisions enabled
-        self.collided = self.move(self.xSpeed, self.ySpeed, solids)
+        self.collided = self.move(dX, dY, solids)
 
         # Check for platforms
         self.snap_platforms(game.get_platforms(), presses, oldRect)
@@ -316,21 +314,24 @@ class Player(Entity):
                 # Action event
                 if self.Events.ACTION in presses:
                     # Create Grab Attack
-                    game.add_controllers(Mechanics.Grab(self))
+                    if self.Events.UP in events:
+                        game.add_controllers(Mechanics.UpGrab(self))
+                    else:
+                        game.add_controllers(Mechanics.Grab(self))
                 # Attack event
                 if self.Events.ATTACK in presses:
                     # Create slash attack
                     game.add_controllers(Mechanics.Slash(self))
 
-        else:
-
-            # Detick cooldown
-            self.cooldown -= 1
-
-            # Align cooldown at 0
-            if self.cooldown <= 0:
-
-                self.cooldown = 0
+        # Decrease stun and cooldown
+        self.stun -= 1
+        self.cooldown -= 1
+        # Align cooldown at 0
+        if self.cooldown <= 0:
+            self.cooldown = 0
+        # Align stun at 0
+        if self.stun <= 0:
+            self.stun = 0
 
         # Update image
         if not self.hasImage:

@@ -29,7 +29,7 @@ def Grab(player: "Player"):
     cfg = Config.attack.grab()
 
     # Starting x position and speed based on player facings(left/right)
-    if caster.xDirection == Core.Dir.LEFT:
+    if player.xDirection == Core.Dir.LEFT:
         xPosition = attack.rect.left - cfg.width
         speed = -cfg.speed
     else:
@@ -39,9 +39,9 @@ def Grab(player: "Player"):
     # Create hitstate from config, change vector x based on direction
     hitState = Config.attack.grab.hitState.copy()
     if player.xDirection == Core.Dir.LEFT:
-        hitState.vector.x = hitState.vector.x
-    elif player.xDirection == Core.Dir.RIGHT:
         hitState.vector.x *= -1
+    elif player.xDirection == Core.Dir.RIGHT:
+        hitState.vector.x *= 1
 
     # Setup callback for first and only projectile
     def call(projectile, player):
@@ -57,13 +57,56 @@ def Grab(player: "Player"):
         main.Projectile(
             pygame.Rect(xPosition, attack.rect.top,
                         cfg.width, attack.rect.height),
-            xSpeed=speed + caster.xSpeed, lifeSpan=cfg.lifeSpan,
+            xSpeed=speed, lifeSpan=cfg.lifeSpan,
             callback=call,
         ),
         birthTick=1,
     )
 
     # Return the attack Object
+    return attack
+
+# Up grab
+def UpGrab(player: "Player"):
+
+    # Reference player (different name to prevent masking in callback)
+    caster = player
+
+    # Sets a lifespan to a little longer than the projectile
+    attack = Base.Attack(
+        caster,
+        cooldown=Config.attack.grab.cooldown,
+        lifeSpan=Config.attack.grab.lifeSpan + 2
+    )
+
+    # Reference config
+    cfg = Config.attack.grab()
+
+    # Create hitstate based from config
+    hitState = Config.attack.grab.hitState.copy()
+    # Make vertical
+    hitState.vector.x = 0
+
+    # Setup callback for first and only projectile
+    def call(projectile, player):
+        # Only interact with other players
+        if player is not caster: # Caster is from higher scope
+            # Hit the player with the hitstate (reference to here ^)
+            player.hit(**hitState.mapping()) # hitState is from higher scope
+            # Delete projectile
+            projectile.kill()
+
+    # Add projectile to be created
+    attack.add_projectile(
+        main.Projectile(
+            pygame.Rect(attack.rect.left, attack.rect.top - cfg.width,
+                        attack.rect.width, cfg.width),
+            ySpeed=cfg.speed, lifeSpan=cfg.lifeSpan,
+            callback=call,
+        ),
+        birthTick=1,
+    )
+
     return attack
 
 # Constructs an Attack with custom behavior

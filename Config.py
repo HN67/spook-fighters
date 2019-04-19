@@ -92,14 +92,14 @@ class attack:
         speed = 5 # Relative horizontal speed
         lifeSpan = 6
 
-        cooldown = 10 # Ticks to cooldown for
+        cooldown = 10 # Ticks to cooldown caster for
 
         # Hit state
         hitState = Core.HitState(
-            damage=1,
+            damage=4,
             force=10,
-            varForce=0,
-            vector=Core.Vector(0.5, 0)
+            varForce=1/10,
+            vector=Core.Vector(0.5, -0.3)
         )
 
     class sword:
@@ -111,14 +111,14 @@ class attack:
             hitState = Core.HitState(
                 damage=7,
                 force=10,
-                varForce=1/10,
-                vector=Core.Vector(0.1, -1)
+                varForce=1/8,
+                vector=Core.Vector(0.5, -0.75)
             )
 
-            xSpeed = 5
-            ySpeed = -5
+            xSpeed = 10
+            ySpeed = -4
 
-            lifeSpan = 10
+            lifeSpan = 6
 
             cooldown = 25
 
