@@ -83,9 +83,9 @@ class Entity(pygame.sprite.Sprite):
     def move(self, dX: int, dY: int, entities: pygame.sprite.Group):
         """Moves to a new position and takes into account collisions"""
 
-        # Determine directions
-        directionX = Dir.direction_x(dX)
-        directionY = Dir.direction_y(dY)
+        # Determine directions, with default to prevent non-movement crashes
+        directionX = Dir.direction_x(dX, default=Dir.RIGHT)
+        directionY = Dir.direction_y(dY, default=Dir.DOWN)
 
         # Create collision saver
         collided = Pair(False, False)

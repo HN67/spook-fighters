@@ -39,24 +39,28 @@ class Dir(Enum):
         return type(self).opposite(self)
 
     @classmethod
-    def direction_x(cls, value):
+    def direction_x(cls, value, default=None):
         """Returns a direction based on sign"""
         if value > 0:
             return cls.RIGHT
         elif value < 0:
             return cls.LEFT
-        else:
+        elif default is None:
             return cls.NONE
+        else:
+            return default
 
     @classmethod
-    def direction_y(cls, value):
+    def direction_y(cls, value, default=None):
         """Returns a direction based on sign"""
         if value > 0:
             return cls.DOWN
         elif value < 0:
             return cls.UP
-        else:
+        elif default is None:
             return cls.NONE
+        else:
+            return default
 
 class Color:
     """Color RGB constants"""

@@ -32,8 +32,13 @@ class hud:
 class stage:
     """Config for stage setup"""
 
-    # Floor height
-    floorHeight = 100
+    # Killbox distance
+    killDistance = 100
+    killBoxWidth = 100
+
+    # Respawn
+    respawnX = game.width / 2
+    respawnY = 100
 
 class player:
     """Config for players"""

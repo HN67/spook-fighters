@@ -103,6 +103,20 @@ class Player(Entity):
         self.xSpeed = vector.x * totalForce
         self.ySpeed = vector.y * totalForce
 
+    def respawn(self, game: "Game"):
+        """Respawns in reference to a game"""
+        # Reset damage
+        self.damage.value = 0
+        # Reset speed vectors
+        self.xSpeed = 0
+        self.ySpeed = 0
+        # Reset cooldowns
+        self.stun = 0
+        self.cooldown = 0
+        # Move to respawn point
+        self.rect.x = game.respawn.x
+        self.rect.y = game.respawn.y
+
     def snap_platforms(self, platforms: pygame.sprite.Group, presses: set, oldRect: pygame.Rect, ):
         """Logic for colliding with platforms"""
         # Setup collision groups
@@ -354,6 +368,10 @@ class Player(Entity):
             else:
                 self.image.fill(self.color)
 
+        # Check for death
+        if len(self.collisions(game.get_killBoxes())) > 0:
+            self.respawn(game)
+
 # Basic projectile class
 # TODO create after_update passable function or something
 class Projectile(Entity):
@@ -434,6 +452,8 @@ class Game:
         self.players = pygame.sprite.Group()
         # Solids: they are used for collisions
         self.solids = pygame.sprite.Group()
+        # Killboxes: player 'dies' on collisions
+        self.killBoxes = pygame.sprite.Group()
         # Projectile: moving, non colliding, non controllable (usually)
         self.projectiles = pygame.sprite.Group()
         # Controllers: they manage projectiles
@@ -446,6 +466,10 @@ class Game:
         # Events and keysHeld variables
         self.events = None
         self.keysHeld = None
+
+        # Game variables
+        # Respawn point
+        self.respawn = Core.Pair(0, 0)
 
     def game_update(self):
         """Represents one update of entire game logic, returns False once the game is over"""
@@ -501,6 +525,10 @@ class Game:
         """Returns the keys held as of last update"""
         return self.keysHeld
 
+    def set_spawn(self, x: int, y: int):
+        """Sets the player spawn point"""
+        self.respawn = Core.Pair(x, y)
+
     def add_barriers(self, *barriers):
         """Add barriers to the game"""
         self.barriers.add(*barriers)
@@ -537,6 +565,11 @@ class Game:
         self.allSprites.add(*labels)
         self.labels.add(*labels)
 
+    def add_killBoxes(self, *killBoxes):
+        """Adds killBoxes to the game"""
+        self.allSprites.add(*killBoxes)
+        self.killBoxes.add(*killBoxes)
+
     def get_solids(self):
         """Returns the solid objects (for collisions) of the game"""
         return self.solids
@@ -552,6 +585,10 @@ class Game:
     def get_platforms(self):
         """Returns the platforms of the game"""
         return self.platforms
+
+    def get_killBoxes(self):
+        """Returns the killboxes of the game"""
+        return self.killBoxes
 
 ## Define some top-scope functions
 # Function to produce a corner-rect
@@ -630,6 +667,47 @@ def setup_game(screen):
     )
     game.add_platforms(*platforms)
 
+    # Create killboxes
+    killboxes = (
+        Base.Barrier(
+            # Top corner to corner
+            cornerRect(
+                -Config.stage.killDistance - Config.stage.killBoxWidth,
+                -Config.stage.killDistance - Config.stage.killBoxWidth,
+                Config.game.width + Config.stage.killDistance + Config.stage.killBoxWidth,
+                -Config.stage.killDistance
+            )
+        ),
+        Base.Barrier(
+            # Bottom corner to corner
+            cornerRect(
+                -Config.stage.killDistance - Config.stage.killBoxWidth,
+                Config.game.height + Config.stage.killDistance,
+                Config.game.width + Config.stage.killDistance + Config.stage.killBoxWidth,
+                Config.game.height + Config.stage.killDistance + Config.stage.killBoxWidth
+            )
+        ),
+        Base.Barrier(
+            # Left
+            cornerRect(
+                -Config.stage.killDistance - Config.stage.killBoxWidth,
+                -Config.stage.killDistance,
+                -Config.stage.killDistance,
+                Config.game.height + Config.stage.killDistance
+            )
+        ),
+        Base.Barrier(
+            # Right
+            cornerRect(
+                Config.game.width + Config.stage.killDistance,
+                -Config.stage.killDistance,
+                Config.game.width + Config.stage.killDistance + Config.stage.killBoxWidth,
+                Config.game.height + Config.stage.killDistance
+            )
+        ),
+    )
+    game.add_killBoxes(*killboxes)
+
     # Create labels
     labels = (
 
@@ -649,6 +727,9 @@ def setup_game(screen):
 
     )
     game.add_labels(*labels)
+
+    # Set spawn
+    game.set_spawn(Config.stage.respawnX, Config.stage.respawnY)
 
     # Return the game object
     return game
