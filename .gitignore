@@ -4,6 +4,7 @@
 # Ignore pycache of custom moduels
 __pycache__/
 
-# Ignore build folder and spec file
+# Ignore build stuff
 build/
+build.bat
 main.spec
