@@ -54,8 +54,8 @@ def Grab(player: "Player"):
 
     # Make it follow the caster
     def follow(projectile):
-        projectile.rect.x = ((caster.rect.right if caster.xDirection == Core.Dir.RIGHT 
-                             else (caster.rect.left - cfg.width))
+        projectile.rect.x = (((caster.rect.left - cfg.width) if caster.xDirection == Core.Dir.LEFT
+                              else caster.rect.right)
                              + speed*projectile.age)
         projectile.rect.y = caster.rect.top
 
