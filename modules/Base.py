@@ -7,8 +7,8 @@ import typing
 import pygame
 
 # Import local files
-import Core
-from Core import Dir, Pair
+from modules import Core
+from modules.Core import Dir, Pair
 
 # Base entity class that holds position and size and frames basic methods
 class Entity(pygame.sprite.Sprite):

@@ -2,7 +2,7 @@
 # Config file for Spook Fighters Py
 
 # Import Core
-import Core
+from modules import Core
 
 class game:
     """General configuration for the game"""

@@ -4,9 +4,9 @@ A repository for the fighter game Spook Fighters, built with Pygame. This is a h
 
 ## Play
 
-To play Spook Fighters, download the [main.exe](https://github.com/HN67/spook-fighters/blob/master/dist/main.exe) file from `dist`.
+To play Spook Fighters, download [main.exe](https://github.com/HN67/spook-fighters/blob/master/dist/main.exe).
 
-Alternatively, to natively run the game, install [Python 3.7+](https://www.python.org/downloads/) and [Pygame 1.9+](https://www.pygame.org/wiki/GettingStarted). Clone the repository and run the `main.py` file to play the native, potentially experiemental version.
+Alternatively, to natively run the game, install [Python 3.7+](https://www.python.org/downloads/) and [Pygame 1.9+](https://www.pygame.org/wiki/GettingStarted). Download the repository and run the `main.py` file to play the native, potentially experiemental version.
 
 ___
 

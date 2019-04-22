@@ -4,9 +4,9 @@
 import pygame
 
 # Import local files
-import Base
-import Config
-import Core
+from modules import Base
+from modules import Config
+from modules import Core
 
 # Import main? not great, but need it for projectile and player
 import main

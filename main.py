@@ -12,14 +12,14 @@ import typing
 import pygame
 
 # Import local files
-import Config
-import Core
-from Core import Dir, Color, Pair
+from modules import Config
+from modules import Core
+from modules.Core import Dir, Color, Pair
 
-import Base
-from Base import Entity
+from modules import Base
+from modules.Base import Entity
 
-import Mechanics
+from modules import Mechanics
 
 # Module level constants
 # Determines if debug info is shown

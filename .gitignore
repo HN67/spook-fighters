@@ -6,5 +6,3 @@ __pycache__/
 
 # Ignore build stuff
 build/
-build.bat
-main.spec
