@@ -29,6 +29,9 @@ class hud:
     x1Position = 10
     x2Position = game.width - damageHeight * 2 - margin
 
+    lifeYPosition = yPosition - damageHeight
+    lifeHeight = damageHeight
+
 class stage:
     """Config for stage setup"""
 
@@ -46,6 +49,9 @@ class player:
     # Height and width of player
     height = 50
     width = 50
+
+    # Stock count
+    lives = 3
 
     # Keyset for Player 1
     keys1 = Core.Keyset(

@@ -43,7 +43,7 @@ class Player(Entity):
         ATTACK = enum.auto()
 
     def __init__(self, rect, *, color=Core.Color.BLACK, image=None,
-                 keyset: Core.Keyset, attributes: Core.PlayerAttributes
+                 keyset: Core.Keyset, attributes: Core.PlayerAttributes, lives: int
                 ):
 
         super().__init__(rect, image)
@@ -86,6 +86,9 @@ class Player(Entity):
         # Init damage counter
         self.damage = Core.Variable(0)
 
+        # Init lives
+        self.lives = Core.Variable(lives)
+
     def hit(self, damage: int, force: int, varForce: float, vector: Core.Vector):
         """Handles the player getting hit\n
         damage - damage counter increase\n
@@ -107,6 +110,8 @@ class Player(Entity):
         """Respawns in reference to a game"""
         # Reset damage
         self.damage.value = 0
+        # Decrement life
+        self.lives.value -= 1
         # Reset speed vectors
         self.xSpeed = 0
         self.ySpeed = 0
@@ -370,6 +375,9 @@ class Player(Entity):
 
         # Check for death
         if len(self.collisions(game.get_killBoxes())) > 0:
+            # TODO probably shouldnt reference stock count from config?
+            # What if they want to change stock count, or will I edit the Config
+            # attributes on the fly (it is possible), and actually probably a good idea
             self.respawn(game)
 
 # Basic projectile class
@@ -626,6 +634,7 @@ def setup_game(screen):
             attributes=Config.player.attributes,
             color=Color.ORANGE,
             keyset=Config.player.keys1,
+            lives=Config.player.lives,
         ),
         Player(
             pygame.Rect(
@@ -636,6 +645,7 @@ def setup_game(screen):
             attributes=Config.player.attributes,
             color=Color.BLUE,
             keyset=Config.player.keys2,
+            lives=Config.player.lives,
         )
     )
     game.create_player(players[0])
@@ -722,6 +732,20 @@ def setup_game(screen):
             pygame.Rect(Config.hud.x2Position, Config.hud.yPosition, 0, 0),
             height=Config.hud.damageHeight,
             variable=players[1].damage,
+            color=Color.BLACK, bgColor=Color.BLUE
+        ),
+
+        Base.Label(
+            pygame.Rect(Config.hud.x1Position, Config.hud.lifeYPosition, 0, 0),
+            height=Config.hud.lifeHeight,
+            variable=players[0].lives,
+            color=Color.BLACK, bgColor=Color.ORANGE
+        ),
+
+        Base.Label(
+            pygame.Rect(Config.hud.x2Position, Config.hud.lifeYPosition, 0, 0),
+            height=Config.hud.lifeHeight,
+            variable=players[1].lives,
             color=Color.BLACK, bgColor=Color.BLUE
         ),
 
