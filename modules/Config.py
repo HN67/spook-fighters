@@ -32,6 +32,10 @@ class hud:
     lifeYPosition = yPosition - damageHeight
     lifeHeight = damageHeight
 
+    # Default font used from system
+    # Should probably also add True font or something
+    sysFont = "Courier New"
+
 class stage:
     """Config for stage setup"""
 

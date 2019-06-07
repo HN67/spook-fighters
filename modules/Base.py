@@ -7,8 +7,9 @@ import typing
 import pygame
 
 # Import local files
-from modules import Core
-from modules.Core import Dir, Pair
+import Config
+import Core
+from Core import Dir, Pair
 
 # Base entity class that holds position and size and frames basic methods
 class Entity(pygame.sprite.Sprite):
@@ -326,7 +327,8 @@ class Label(pygame.sprite.Sprite):
 
         # Setup text stuff
         # Create font
-        self.font = pygame.font.SysFont("Courier New", height)
+        # Should maybe changed to True font eventually
+        self.font = pygame.font.SysFont(Config.hud.sysFont, height)
         # Render
         self._render()
 
