@@ -98,7 +98,8 @@ class AttributeSet:
 class PlayerAttributes:
     """Stores various data about the behavior of the player"""
 
-    speed: int
+    speed: int # Horizontal acceleration
+    maxSpeed: int # Maximum horizontal speed
     jump: int
     fastfall: int
     gravity: int

@@ -234,18 +234,48 @@ class Player(Entity):
                 self.ySpeed = min(self.attributes.slide, self.ySpeed)
 
             # A left D right
-            if self.Events.LEFT in events:
+            if self.Events.LEFT in events and self.Events.RIGHT in events:
+                # Slow down (cancellation) based on current direction of movement
+                if self.xSpeed > 0:
+                    self.xSpeed -= self.attributes.speed
+                    # Align
+                    if self.xSpeed > 0:
+                        self.xSpeed = 0
+                elif self.xSpeed < 0:
+                    self.xSpeed += self.attributes.speed
+                    # Align
+                    if self.xSpeed > 0:
+                        self.xSpeed = 0
+            elif self.Events.LEFT in events:
                 # Set speed
-                self.xSpeed = -self.attributes.speed
+                if self.xSpeed > -self.attributes.maxSpeed:
+                    self.xSpeed -= self.attributes.speed
+                    # Align
+                    if self.xSpeed < -self.attributes.maxSpeed:
+                        self.xSpeed = -self.attributes.maxSpeed
                 # Remember direction
                 self.xDirection = Dir.LEFT
             elif self.Events.RIGHT in events:
                 # Set speed
-                self.xSpeed = self.attributes.speed
+                if self.xSpeed < self.attributes.maxSpeed:
+                    self.xSpeed += self.attributes.speed
+                    # Align
+                    if self.xSpeed > self.attributes.maxSpeed:
+                        self.xSpeed = self.attributes.maxSpeed
                 # Remember direction
                 self.xDirection = Dir.RIGHT
             else:
-                self.xSpeed = 0
+                # Slow down based on current direction of movement
+                if self.xSpeed > 0:
+                    self.xSpeed -= self.attributes.speed
+                    # Align
+                    if self.xSpeed > 0:
+                        self.xSpeed = 0
+                elif self.xSpeed < 0:
+                    self.xSpeed += self.attributes.speed
+                    # Align
+                    if self.xSpeed > 0:
+                        self.xSpeed = 0
 
             # Add fast fall pull
             if self.Events.DOWN in events:

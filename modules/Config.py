@@ -80,6 +80,7 @@ class player:
     # Attributes
     attributes = Core.PlayerAttributes(
         speed=7,
+        maxSpeed=9,
         jump=17,
         fastfall=2,
         gravity=1,
