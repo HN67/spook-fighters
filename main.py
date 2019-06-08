@@ -475,6 +475,9 @@ class Game:
 
         # Create game surface
         self.surface = pygame.surface.Surface((Config.game.width, Config.game.height))
+        
+        # Blit location
+        self.position = (Config.game.x, Config.game.y)
 
         # Create SpriteGroups
 
@@ -507,24 +510,20 @@ class Game:
         # Respawn point
         self.respawn = Core.Pair(0, 0)
 
-    def game_update(self):
+    def game_update(self, events):
         """Represents one update of entire game logic, returns False once the game is over"""
 
         # Collect events
-        self.events = pygame.event.get()
+        self.events = events.copy()
 
         # Check each event, debug it
         for event in self.events:
 
-            debug(event)
-
-            # Return False (break) if the window was quit
-            if event.type == pygame.QUIT:
-                return False
-
-            # Check for key events, right now the objects mostly check keys themselves
-            if event.type == pygame.KEYDOWN:
-                pass
+            # Change the pos of mouse events to be relative
+            # TODO the events are being passed by reference, so this modifies the entire
+            # events for anything. events should probably be copied
+            if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+                event.pos = (event.pos[0] - self.position[0], event.pos[1] - self.position[1])
 
         # Collect keys held down
         self.keysHeld = pygame.key.get_pressed()
@@ -810,8 +809,21 @@ def main():
     # Run the object
     while running:
 
-        # Update the game (it draws itself onto the screen)
-        running = spook.game_update()
+        # Collect events
+        events = pygame.event.get()
+
+        # Check each event, debug it
+        for event in events:
+            
+            # Debug event
+            debug(event)
+
+            # break if the window was quit
+            if event.type == pygame.QUIT:
+                running = False
+
+        # Update the game with events
+        spook.game_update(events)
 
         # Flip the display
         pygame.display.flip()
