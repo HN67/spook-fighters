@@ -405,9 +405,7 @@ class Player(Entity):
 
         # Check for death
         if len(self.collisions(game.get_killBoxes())) > 0:
-            # TODO probably shouldnt reference stock count from config?
-            # What if they want to change stock count, or will I edit the Config
-            # attributes on the fly (it is possible), and actually probably a good idea
+            # Respawn
             self.respawn(game)
 
 # Basic projectile class
@@ -550,7 +548,7 @@ class Game:
         self.labels.draw(self.surface)
 
         # Blit onto the screen
-        self.screen.blit(self.surface, (0, 0))
+        self.screen.blit(self.surface, (Config.game.x, Config.game.y))
 
         # Finish sucsessfully
         return True
@@ -798,10 +796,10 @@ def main():
     clock = pygame.time.Clock()
 
     # Make screen based on config
-    screen = pygame.display.set_mode((Config.game.width, Config.game.height))
+    screen = pygame.display.set_mode((Config.screen.width, Config.screen.height))
 
     # Set captions
-    pygame.display.set_caption(Config.game.name)
+    pygame.display.set_caption(Config.screen.name)
 
     # Create game object
     spook = setup_game(screen)
@@ -819,7 +817,7 @@ def main():
         pygame.display.flip()
 
         # Frame rate based on config
-        clock.tick(Config.game.fps)
+        clock.tick(Config.screen.fps)
 
 # Run main() automatically if this is the __main__ file
 if __name__ == "__main__":

@@ -4,8 +4,8 @@
 # Import Core
 from modules import Core
 
-class game:
-    """General configuration for the game"""
+class screen:
+    """Config for specifically the screen"""
 
     # Width and height of the display screen
     width = 800
@@ -16,6 +16,17 @@ class game:
 
     # Frames (ticks) per second max of the game
     fps = 60
+
+class game:
+    """General configuration for the game"""
+
+    # Position on screen
+    x = 0
+    y = 0
+
+    # Width and height of the game area
+    width = 800
+    height = 600
 
 class hud:
     """Configuration for the HUD"""
@@ -83,8 +94,8 @@ class player:
 
     # Attributes
     attributes = Core.PlayerAttributes(
-        speed=2,
-        maxSpeed=9,
+        speed=4,
+        maxSpeed=7,
         jump=17,
         fastfall=2,
         gravity=1,
