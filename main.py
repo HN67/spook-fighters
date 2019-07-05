@@ -475,7 +475,7 @@ class Game:
 
         # Create game surface
         self.surface = pygame.surface.Surface((Config.game.width, Config.game.height))
-        
+
         # Blit location
         self.position = (Config.game.x, Config.game.y)
 
@@ -520,8 +520,6 @@ class Game:
         for event in self.events:
 
             # Change the pos of mouse events to be relative
-            # TODO the events are being passed by reference, so this modifies the entire
-            # events for anything. events should probably be copied
             if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
                 event.pos = (event.pos[0] - self.position[0], event.pos[1] - self.position[1])
 
@@ -745,35 +743,47 @@ def setup_game(screen):
     )
     game.add_killBoxes(*killboxes)
 
+    # TODO THIS IS BAD DONT LEAVE IT ONLY FOR TESTING
+    def test():
+        debug("Clicked!")
+
     # Create labels
     labels = (
 
         Base.Label(
-            pygame.Rect(Config.hud.x1Position, Config.hud.yPosition, 0, 0),
+            (Config.hud.x1Position, Config.hud.yPosition),
             height=Config.hud.damageHeight,
             variable=players[0].damage,
             color=Color.BLACK, bgColor=Color.ORANGE
         ),
 
         Base.Label(
-            pygame.Rect(Config.hud.x2Position, Config.hud.yPosition, 0, 0),
+            (Config.hud.x2Position, Config.hud.yPosition),
             height=Config.hud.damageHeight,
             variable=players[1].damage,
             color=Color.BLACK, bgColor=Color.BLUE
         ),
 
         Base.Label(
-            pygame.Rect(Config.hud.x1Position, Config.hud.lifeYPosition, 0, 0),
+            (Config.hud.x1Position, Config.hud.lifeYPosition),
             height=Config.hud.lifeHeight,
             variable=players[0].lives,
             color=Color.BLACK, bgColor=Color.ORANGE
         ),
 
         Base.Label(
-            pygame.Rect(Config.hud.x2Position, Config.hud.lifeYPosition, 0, 0),
+            (Config.hud.x2Position, Config.hud.lifeYPosition),
             height=Config.hud.lifeHeight,
             variable=players[1].lives,
             color=Color.BLACK, bgColor=Color.BLUE
+        ),
+
+        Base.Label(
+            (0, 0),
+            height=Config.hud.textHeight,
+            variable=Core.Variable("Menu"),
+            color=Color.BLACK, bgColor=Color.GRAY,
+            callback=test
         ),
 
     )
@@ -814,7 +824,7 @@ def main():
 
         # Check each event, debug it
         for event in events:
-            
+
             # Debug event
             debug(event)
 

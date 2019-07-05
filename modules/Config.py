@@ -31,8 +31,11 @@ class game:
 class hud:
     """Configuration for the HUD"""
 
+    # Text label height
+    textHeight = 40
+
     # Height of the damage variables
-    damageHeight = 40
+    damageHeight = textHeight
 
     margin = 10
     yPosition = game.height - margin - damageHeight
@@ -45,6 +48,7 @@ class hud:
 
     # Default font used from system
     # Should probably also add True font or something
+    # Ideally would always be monospace?
     sysFont = "Courier New"
 
 class stage:

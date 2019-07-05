@@ -307,16 +307,16 @@ class DirectionalBarrier(Barrier):
 
 # Label class for display numbers and text
 class Label(pygame.sprite.Sprite):
-    """Class for creating text labels"""
+    """Class for creating text labels
 
-    def __init__(self, rect: pygame.Rect, variable: Core.Variable,
-                 height: int, color: Core.Color, bgColor: Core.Color):
+    """
+
+    def __init__(self, position: typing.Tuple[int, int], variable: Core.Variable,
+                 height: int, color: Core.Color, bgColor: Core.Color,
+                 callback=lambda *args, **kwargs: None):
 
         # Call sprite constructor
         super().__init__()
-
-        # Reference rect
-        self.rect = rect
 
         # Reference colors
         self.color = color
@@ -325,10 +325,17 @@ class Label(pygame.sprite.Sprite):
         # Reference variable
         self.text = variable
 
+        # Reference callback
+        self.callback = callback
+
         # Setup text stuff
         # Create font
         # Should maybe changed to True font eventually
         self.font = pygame.font.SysFont(Config.hud.sysFont, height)
+
+        # Construct rect
+        self.rect = pygame.Rect(position, self.font.size(str(self.text.value)))
+
         # Render
         self._render()
 
@@ -340,6 +347,17 @@ class Label(pygame.sprite.Sprite):
     # Also it might be used later
     def update(self, game: "Game"): #pylint: disable=unused-argument
         """Updates the entity"""
+
+        # Check for click
+        for event in game.events:
+
+            # TODO allow customizable mouse action (down/up)?
+            # or look for full down and up CLICK action
+
+            # Check for mouseevent and within bounds
+            if event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos):
+                # Call callback
+                self.callback()
 
         # Redraw the text
         self._render()
