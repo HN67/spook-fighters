@@ -71,7 +71,8 @@ class Color:
     TRANSPARENT = (0, 0, 0, 0)
 
     GRAY = (127, 127, 127)
-    LIGHTGRAY = (63, 63, 63)
+    LIGHTGRAY = (191, 191, 191)
+    DARKGRAY = (63, 63, 63)
 
     RED = (255, 0, 0)
     GREEN = (0, 255, 0)

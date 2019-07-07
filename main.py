@@ -773,18 +773,33 @@ def setup_menu(main):
     menu = Core.Screen(
         main.screen,
         pygame.Rect(Config.game.x, Config.game.y, Config.game.width, Config.game.height),
-        Core.Color.LIGHTGRAY
+        Core.Color.DARKGRAY
     )
+
+    # Sets the main's active to its menu
+    def goGame():
+        main.active = main.game
 
     # Add visible labels
     menu.add_sprites(
 
+        # Title text
         Base.Label(
-            (Config.game.width//4, Config.game.height//4),
+            Config.menu.titlePos,
             Core.Variable("SPOOK FIGHTERS PY"),
-            height=64,
+            height=Config.menu.titleSize,
             color=Core.Color.ORANGE,
-            bgColor=Core.Color.WHITE,
+            bgColor=Core.Color.DARKGRAY,
+        ),
+
+        # Start button
+        Base.Label(
+            Config.menu.startPos,
+            Core.Variable("Start"),
+            height=Config.menu.textSize,
+            color=Core.Color.BLUE,
+            bgColor=Core.Color.GRAY,
+            callback=goGame,
         ),
 
     )
@@ -792,6 +807,7 @@ def setup_menu(main):
     return menu
 
 class Main:
+    """Object to handle logic normally inside a main() function"""
 
     def __init__(self):
         """Setup the Main object to run the game"""
@@ -809,13 +825,13 @@ class Main:
         pygame.display.set_caption(Config.screen.name)
 
         # Create game (arena) object
-        self.arena = setup_game(self)
+        self.game = setup_game(self)
 
         # Create menu screen
         self.menu = setup_menu(self)
 
         # Start game in-fight
-        self.active = self.arena
+        self.active = self.menu
 
     def start(self):
         """Starts the main game loop"""
@@ -854,10 +870,10 @@ def main():
     """Main setup to start the game"""
 
     # Create Main object
-    main = Main()
+    wrap = Main()
 
     # Start object
-    main.start()
+    wrap.start()
 
 # Run main() automatically if this is the __main__ file
 if __name__ == "__main__":

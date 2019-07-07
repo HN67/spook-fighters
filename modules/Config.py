@@ -28,6 +28,21 @@ class game:
     width = 800
     height = 600
 
+class menu:
+    """Configuration for menu screen"""
+
+    # Position of title bar
+    titlePos = (125, 100)
+
+    # Size of title text
+    titleSize = 60
+
+    # Position of start button
+    startPos = (350, 400)
+
+    # Size of text on menu screen
+    textSize = 25
+
 class hud:
     """Configuration for the HUD"""
 
