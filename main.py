@@ -465,24 +465,15 @@ class Projectile(Entity):
         self.post(self)
 
 # Main game class (very unrefined)
-class Game:
+class Game(Core.Screen):
     """Main game class for running a game of Spook Fighters"""
 
-    def __init__(self, screen):
-        ## Main fundamental setup
-        # Reference the window screen
-        self.screen = screen
+    def __init__(self, screen, rect, color):
+        
+        # Perform basic screen setup
+        super().__init__(screen, rect, color)
 
-        # Create game surface
-        self.surface = pygame.surface.Surface((Config.game.width, Config.game.height))
-
-        # Blit location
-        self.position = (Config.game.x, Config.game.y)
-
-        # Create SpriteGroups
-
-        # All group
-        self.allSprites = pygame.sprite.Group()
+        # Create a bunch of spritegroups
         # Barriers: solid ground for players to jump off
         self.barriers = pygame.sprite.Group()
         # Platforms: one way platforms that players can jump through
@@ -502,34 +493,19 @@ class Game:
         # Labels: HUD/GUI labels for information output
         self.labels = pygame.sprite.Group()
 
-        # Events and keysHeld variables
-        self.events = None
-        self.keysHeld = None
-
         # Game variables
         # Respawn point
         self.respawn = Core.Pair(0, 0)
 
-    def game_update(self, events):
-        """Represents one update of entire game logic, returns False once the game is over"""
+    def update(self, events):
+        """Represents one update of entire game logic"""
 
-        # Collect events
-        self.events = events.copy()
-
-        # Check each event, debug it
-        for event in self.events:
-
-            # Change the pos of mouse events to be relative
-            if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
-                event.pos = (event.pos[0] - self.position[0], event.pos[1] - self.position[1])
-
-        # Collect keys held down
-        self.keysHeld = pygame.key.get_pressed()
+        # Gather events
+        self.gather(events)
 
         # Update all sprites
         #self.allSprites.update(self)
         # In specific order
-        # Update barriers (why)?
         # Update players, create controllers
         # Update projectiles, sometimes based on players
         # Update conntrollers, create projectiles
@@ -539,68 +515,63 @@ class Game:
         self.controllers.update(self)
         self.labels.update(self)
 
+    def draw(self):
+        """Draw the game state"""
+
         # Draw all sprites onto sky color, labels above everything
-        self.surface.fill(Color.SKYBLUE)
+        self.surface.fill(self.color)
         self.visibles.draw(self.surface)
         self.labels.draw(self.surface)
 
         # Blit onto the screen
         self.screen.blit(self.surface, (Config.game.x, Config.game.y))
 
-        # Finish sucsessfully
-        return True
-
-    def get_events(self):
-        """Returns the PyGame events collected last update"""
-        return self.events
-
-    def keys_held(self):
-        """Returns the keys held as of last update"""
-        return self.keysHeld
-
     def set_spawn(self, x: int, y: int):
         """Sets the player spawn point"""
         self.respawn = Core.Pair(x, y)
 
+    def add_sprites(self, *sprites):
+        raise NotImplementedError("Use a more specific method detailing what kind of sprite")
+
     def add_barriers(self, *barriers):
         """Add barriers to the game"""
         self.barriers.add(*barriers)
-        self.allSprites.add(*barriers)
+        self.sprites.add(*barriers)
         self.solids.add(*barriers)
         self.visibles.add(*barriers)
 
     def add_platforms(self, *platforms):
         """Adds platforms to the game"""
         self.platforms.add(*platforms)
-        self.allSprites.add(*platforms)
+        self.sprites.add(*platforms)
         self.visibles.add(*platforms)
 
     def create_player(self, player):
         """Add a player to the game"""
         self.players.add(player)
-        self.allSprites.add(player)
+        self.sprites.add(player)
         self.solids.add(player)
         self.visibles.add(player)
 
     def add_projectiles(self, *projectiles):
         """Adds projectiles to the game state"""
         self.projectiles.add(*projectiles)
-        self.allSprites.add(*projectiles)
+        self.sprites.add(*projectiles)
         self.visibles.add(*projectiles)
 
     def add_controllers(self, *controllers):
         """Adds controllers to the game state"""
-        self.allSprites.add(*controllers)
+        self.sprites.add(*controllers)
         self.controllers.add(*controllers)
 
     def add_labels(self, *labels):
         """Adds labels to the game"""
-        self.allSprites.add(*labels)
+        self.sprites.add(*labels)
         self.labels.add(*labels)
 
     def add_killBoxes(self, *killBoxes):
         """Adds killBoxes to the game"""
-        self.allSprites.add(*killBoxes)
+        self.sprites.add(*killBoxes)
         self.killBoxes.add(*killBoxes)
 
     def get_solids(self):
@@ -643,7 +614,7 @@ def setup_game(screen):
     """Sets up and returns Game instance based on 'screen'"""
 
     # Create game object
-    game = Game(screen)
+    game = Game(screen, pygame.Rect(Config.game.x, Config.game.y, Config.game.width, Config.game.height), Core.Color.SKYBLUE)
 
     # Populate the game object
     # Create Players
@@ -795,6 +766,31 @@ def setup_game(screen):
     # Return the game object
     return game
 
+def setup_menu(screen):
+    """Returns a set up menu linked to the given screen"""
+
+    # Create menu object
+    menu = Core.Screen(
+        screen,
+        pygame.Rect(Config.game.x, Config.game.y, Config.game.width, Config.game.height),
+        Core.Color.LIGHTGRAY
+    )
+
+    # Add visible labels
+    menu.add_sprites(
+
+        Base.Label(
+            (Config.game.width//4, Config.game.height//4),
+            Core.Variable("SPOOK FIGHTERS PY"),
+            height=64,
+            color=Core.Color.ORANGE,
+            bgColor=Core.Color.WHITE,
+        ),
+
+    )
+
+    return menu
+
 def main():
     """Main function to start the game"""
 
@@ -813,11 +809,14 @@ def main():
     # Create game object
     spook = setup_game(screen)
 
-    # Create flag for when game is quit
-    running = True
+    # Create menu screen
+    menu = setup_menu(screen)
+
+    # Start game in-fight
+    active = spook
 
     # Run the object
-    while running:
+    while active:
 
         # Collect events
         events = pygame.event.get()
@@ -830,10 +829,13 @@ def main():
 
             # break if the window was quit
             if event.type == pygame.QUIT:
-                running = False
+                active = None
 
-        # Update the game with events
-        spook.game_update(events)
+        # Update the current screen with events
+        active.update(events)
+
+        # Draw current screen
+        active.draw()
 
         # Flip the display
         pygame.display.flip()

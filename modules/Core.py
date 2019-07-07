@@ -64,9 +64,14 @@ class Dir(Enum):
 
 class Color:
     """Color RGB constants"""
+
     BLACK = (0, 0, 0)
     WHITE = (255, 255, 255)
+
+    TRANSPARENT = (0, 0, 0, 0)
+
     GRAY = (127, 127, 127)
+    LIGHTGRAY = (63, 63, 63)
 
     RED = (255, 0, 0)
     GREEN = (0, 255, 0)
@@ -171,3 +176,76 @@ class HitState:
             self.damage, self.force, self.varForce,
             Vector(self.vector.x, self.vector.y)
         )
+
+# Main game class (very unrefined)
+class Screen:
+    """Main game class for running a game of Spook Fighters"""
+
+    def __init__(self, screen: pygame.Surface, rect: pygame.Rect, color: Color):
+
+        ## Main fundamental setup
+
+        # Reference the screen to be drawn on
+        self.screen = screen
+
+        # Reference the rect used for blit location and dimensions
+        self.rect = rect
+
+        # Reference background color
+        self.color = color
+
+        # Create game surface
+        self.surface = pygame.surface.Surface(rect.size)
+        
+        # Contined sprite group
+        self.sprites = pygame.sprite.Group()
+
+        # Events and keysHeld variables
+        self.events = None
+        self.keysHeld = None
+    
+    def gather(self, events):
+        """Gathers pygame events and keypresses into object attributes"""
+        # Collect events
+        self.events = events.copy()
+
+        # Handle events, mostly mouse relativizing
+        for event in self.events:
+
+            # Change the pos of mouse events to be relative
+            if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+                event.pos = (event.pos[0] - self.rect.x, event.pos[1] - self.rect.y)
+
+        # Collect keys held down
+        self.keysHeld = pygame.key.get_pressed()
+
+    def update(self, events):
+        """Performs a tick of update logic"""
+
+        # Gather events
+        self.gather(events)
+
+        # Update contained sprites
+        self.sprites.update(self)
+
+    def draw(self):
+        """Draws the screens surface onto defined higher screen"""
+
+        # Draw all sprites onto base colors
+        self.surface.fill(self.color)
+        self.sprites.draw(self.surface)
+
+        # Blit onto the screen
+        self.screen.blit(self.surface, (self.rect.x, self.rect.y))
+
+    def get_events(self):
+        """Returns the PyGame events collected last update"""
+        return self.events
+
+    def keys_held(self):
+        """Returns the keys held as of last update"""
+        return self.keysHeld
+
+    def add_sprites(self, *sprites):
+        """Adds sprites to the screen"""
+        self.sprites.add(*sprites)
