@@ -610,11 +610,11 @@ else:
         """Acts the exact same as pythons 'print', but can be disabled by a global"""
         return None
 
-def setup_game(screen):
-    """Sets up and returns Game instance based on 'screen'"""
+def setup_game(main):
+    """Sets up and returns Game instance based on given Main"""
 
     # Create game object
-    game = Game(screen, pygame.Rect(Config.game.x, Config.game.y, Config.game.width, Config.game.height), Core.Color.SKYBLUE)
+    game = Game(main.screen, pygame.Rect(Config.game.x, Config.game.y, Config.game.width, Config.game.height), Core.Color.SKYBLUE)
 
     # Populate the game object
     # Create Players
@@ -714,9 +714,9 @@ def setup_game(screen):
     )
     game.add_killBoxes(*killboxes)
 
-    # TODO THIS IS BAD DONT LEAVE IT ONLY FOR TESTING
-    def test():
-        debug("Clicked!")
+    # Sets the main's active to its menu
+    def goMenu():
+        main.active = main.menu
 
     # Create labels
     labels = (
@@ -754,7 +754,7 @@ def setup_game(screen):
             height=Config.hud.textHeight,
             variable=Core.Variable("Menu"),
             color=Color.BLACK, bgColor=Color.GRAY,
-            callback=test
+            callback=goMenu
         ),
 
     )
@@ -766,12 +766,12 @@ def setup_game(screen):
     # Return the game object
     return game
 
-def setup_menu(screen):
+def setup_menu(main):
     """Returns a set up menu linked to the given screen"""
 
     # Create menu object
     menu = Core.Screen(
-        screen,
+        main.screen,
         pygame.Rect(Config.game.x, Config.game.y, Config.game.width, Config.game.height),
         Core.Color.LIGHTGRAY
     )
@@ -791,57 +791,73 @@ def setup_menu(screen):
 
     return menu
 
+class Main:
+
+    def __init__(self):
+        """Setup the Main object to run the game"""
+
+        # Init pygame
+        pygame.init()
+
+        # Create clock
+        self.clock = pygame.time.Clock()
+
+        # Make screen based on config
+        self.screen = pygame.display.set_mode((Config.screen.width, Config.screen.height))
+
+        # Set captions
+        pygame.display.set_caption(Config.screen.name)
+
+        # Create game (arena) object
+        self.arena = setup_game(self)
+
+        # Create menu screen
+        self.menu = setup_menu(self)
+
+        # Start game in-fight
+        self.active = self.arena
+
+    def start(self):
+        """Starts the main game loop"""
+
+        # Run the object
+        while self.active:
+
+            # Collect events
+            events = pygame.event.get()
+
+            # Check each event, debug it
+            for event in events:
+
+                # Debug event
+                debug(event)
+
+                # break if the window was quit
+                if event.type == pygame.QUIT:
+                    self.active = None
+
+            # Only do stuff if not quiting
+            if self.active is not None:
+                # Update the current screen with events
+                self.active.update(events)
+
+                # Draw current screen
+                self.active.draw()
+
+                # Flip the display
+                pygame.display.flip()
+
+                # Frame rate based on config
+                self.clock.tick(Config.screen.fps)
+
 def main():
-    """Main function to start the game"""
+    """Main setup to start the game"""
 
-    # Init pygame
-    pygame.init()
+    # Create Main object
+    main = Main()
 
-    # Create clock
-    clock = pygame.time.Clock()
-
-    # Make screen based on config
-    screen = pygame.display.set_mode((Config.screen.width, Config.screen.height))
-
-    # Set captions
-    pygame.display.set_caption(Config.screen.name)
-
-    # Create game object
-    spook = setup_game(screen)
-
-    # Create menu screen
-    menu = setup_menu(screen)
-
-    # Start game in-fight
-    active = spook
-
-    # Run the object
-    while active:
-
-        # Collect events
-        events = pygame.event.get()
-
-        # Check each event, debug it
-        for event in events:
-
-            # Debug event
-            debug(event)
-
-            # break if the window was quit
-            if event.type == pygame.QUIT:
-                active = None
-
-        # Update the current screen with events
-        active.update(events)
-
-        # Draw current screen
-        active.draw()
-
-        # Flip the display
-        pygame.display.flip()
-
-        # Frame rate based on config
-        clock.tick(Config.screen.fps)
+    # Start object
+    main.start()
 
 # Run main() automatically if this is the __main__ file
 if __name__ == "__main__":
